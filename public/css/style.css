@@ -1,0 +1,153 @@
+@keyframes marquee {
+    0% {
+        transform: translateX(100%);
+    }
+
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+.animate-marquee {
+    animation: marquee 20s linear infinite;
+}
+
+.hamburger-line {
+    transition: all 0.3s ease;
+}
+
+.hamburger.active .hamburger-line:nth-child(1) {
+    transform: rotate(45deg) translate(6px, 6px);
+}
+
+.hamburger.active .hamburger-line:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger.active .hamburger-line:nth-child(3) {
+    transform: rotate(-45deg) translate(6px, -6px);
+}
+
+/* Product Card Styles */
+/* .product-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+} */
+
+/* Carousel Styles */
+.carousel-images {
+    transition: transform 0.5s ease-in-out;
+}
+
+.carousel-indicator.active {
+    opacity: 1;
+}
+
+/* Improve touch experience for carousel */
+.product-carousel {
+    touch-action: pan-y pinch-zoom;
+    user-select: none;
+}
+
+.carousel-images {
+    touch-action: pan-y;
+}
+
+/* Prevent image dragging */
+.carousel-image img {
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    /* user-drag: none; */
+}
+
+/* Product Card Layout Fixes */
+.product-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.product-card > .relative {
+    flex-shrink: 0;
+}
+
+.product-card .p-4 {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Product Title - Single Line with Ellipsis */
+.product-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    line-height: 1.2;
+    margin-bottom: 0.25rem;
+}
+
+/* Ensure price container stays at bottom */
+.price-container {
+    margin-top: auto;
+    flex-shrink: 0;
+}
+
+.product-variant {
+    flex-shrink: 0;
+}
+
+
+/* css for product-details.php */
+
+/* Product Detail Page Styles */
+.thumbnail {
+    transition: all 0.3s ease;
+}
+
+.thumbnail:hover {
+    transform: scale(1.05);
+}
+
+.quantity-btn:active {
+    transform: scale(0.95);
+}
+
+/* Size selection active state */
+input[name="size"]:checked + span {
+    background-color: #D1D5DB !important;
+    color: #000000 !important;
+    border-color: #D1D5DB !important;
+}
+
+/* Accordion transitions */
+.accordion-content {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Image grid responsiveness */
+@media (max-width: 768px) {
+    .image-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .image-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Ensure buttons are visible on touch devices */
+@media (max-width: 768px) {
+    .carousel-nav {
+        opacity: 1 !important;
+        background-color: rgba(0, 0, 0, 0.7) !important;
+    }
+}

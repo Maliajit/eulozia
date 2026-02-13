@@ -9,9 +9,19 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        then: function () {
+            Route::middleware('web')
+                ->group(base_path('routes/admin.php'));
+        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias([
+            'admin.auth' => \App\Http\Middleware\AdminAuth::class,
+            'admin.api.auth' => \App\Http\Middleware\AdminApiAuth::class,
+            'customer.auth' => \App\Http\Middleware\CustomerAuth::class,
+            'customer.api.auth' => \App\Http\Middleware\CustomerApiAuth::class,
+            'sync.cart' => \App\Http\Middleware\SyncCartAfterLogin::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

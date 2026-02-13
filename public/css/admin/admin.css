@@ -1,0 +1,810 @@
+/**
+ * Universal Admin Theme (Single Source of Truth)
+ *
+ * Purpose:
+ * - This is the ONLY CSS file that should be loaded for the admin panel.
+ * - It centralizes theme variables, component styles, and table styling.
+ *
+ * How to theme:
+ * - Edit the :root variables below.
+ * - No other files should be changed for branding/theme updates.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    /* Primary Branding Colors */
+    --primary-color: #6366f1;
+    --primary-light: #818cf8;
+    --primary-dark: #4f46e5;
+    --primary-brand-start: #6366f1;
+    --primary-brand-end: #9333ea;
+    --primary-gradient: linear-gradient(135deg, var(--primary-brand-start) 0%, var(--primary-brand-end) 100%);
+    --primary-shadow: rgba(99, 102, 241, 0.25);
+    --primary-shadow-hover: rgba(99, 102, 241, 0.4);
+
+    /* Secondary Branding Colors */
+    --secondary-color: #6b7280;
+    --secondary-gradient: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+
+    /* Semantic Colors */
+    --success-color: #10b981;
+    --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    --danger-color: #ef4444;
+    --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    --warning-color: #f59e0b;
+    --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    --warning-light: #fef3c7;
+
+    /* Status Badge Backgrounds */
+    --status-success-bg: #d1fae5;
+    --status-success-text: #065f46;
+    --status-danger-bg: #fee2e2;
+    --status-danger-text: #991b1b;
+    --status-warning-bg: #fef3c7;
+    --status-warning-text: #92400e;
+    --status-info-bg: #e0e7ff;
+    --status-info-text: #3730a3;
+
+    /* Backgrounds & Surfaces */
+    --bg-main: #f9fafb;
+    --surface-card: #ffffff;
+    --border-color: #e5e7eb;
+
+    /* Sidebar Variables */
+    --sidebar-bg: rgba(255, 255, 255, 0.8);
+    --sidebar-text: #374151;
+    --sidebar-active-bg: #f3f4f6;
+    --sidebar-active-text: #4f46e5;
+    --sidebar-width-expanded: 16rem;
+    --sidebar-width-collapsed: 6rem;
+
+    /* Header Variables */
+    --header-bg: #ffffff;
+    --header-border: #e5e7eb;
+    --header-text: #1f2937;
+    --header-link: #374151;
+    --header-link-hover: #4f46e5;
+
+    /* Typography */
+    --font-main: 'Inter', sans-serif;
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-muted: #9ca3af;
+
+    /* Logo Customization */
+    --admin-logo-icon: "fas fa-store";
+    /* Placeholder for CSS logic if needed, but mainly for reference */
+    --admin-logo-image: none;
+    /* url('/path/to/logo.png') */
+    --admin-logo-size: 2.5rem;
+    --admin-logo-login-size: 5rem;
+    --admin-logo-radius: 0.75rem;
+}
+
+* {
+    font-family: var(--font-main);
+}
+
+/* ----------------------------------------------------
+   CORE UI ELEMENTS
+---------------------------------------------------- */
+
+
+/* Unified Logo Component */
+.admin-logo-box {
+    width: var(--admin-logo-size);
+    height: var(--admin-logo-size);
+    background: var(--primary-gradient);
+    border-radius: var(--admin-logo-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    background-image: var(--admin-logo-image);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    flex-shrink: 0;
+}
+
+.admin-logo-box.login-size {
+    width: var(--admin-logo-login-size);
+    height: var(--admin-logo-login-size);
+    font-size: 2.5rem;
+    border-radius: 1.25rem;
+}
+
+/* Hide icon if background image is present (simple CSS hack) */
+.admin-logo-box[style*="--admin-logo-image: url"] i {
+    display: none !important;
+}
+
+/* --- LOGIN PAGE THEME --- */
+.login-body {
+    background: var(--primary-gradient);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.login-card {
+    background: var(--surface-card);
+    border-radius: 1.5rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    max-width: 28rem;
+    width: 100%;
+    border: 1px solid var(--border-color);
+}
+
+.login-header {
+    padding: 2rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.login-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+}
+
+.login-content {
+    padding: 2rem;
+}
+
+/* Admin header (topbar) */
+.admin-header {
+    background-color: var(--header-bg) !important;
+    border-bottom: 1px solid var(--header-border) !important;
+    color: var(--header-text) !important;
+}
+
+.admin-header a,
+.admin-header button {
+    color: var(--header-link);
+}
+
+.admin-header a:hover,
+.admin-header button:hover {
+    color: var(--header-link-hover);
+}
+
+/* Sidebar base */
+#sidebar {
+    background-color: var(--sidebar-bg) !important;
+    color: var(--sidebar-text);
+}
+
+#sidebar a {
+    color: var(--sidebar-text);
+}
+
+#sidebar a:hover {
+    color: var(--sidebar-active-text);
+}
+
+/* Glassmorphism effects */
+.glass {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.glass-dark {
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Smooth transitions */
+.sidebar-transition {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+/* Hover lift effect */
+.hover-lift {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Loading animation */
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Gradient text */
+.gradient-text {
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Card hover effects */
+.card-hover {
+    transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Buttons */
+.btn-primary {
+    background: var(--primary-gradient);
+    color: white;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px var(--primary-shadow);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 10px 15px var(--primary-shadow-hover);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: var(--secondary-gradient);
+    color: white;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-success {
+    background: var(--success-gradient);
+    color: white;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-danger {
+    background: var(--danger-gradient);
+    color: white;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+/* Status badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-active {
+    background-color: var(--status-success-bg);
+    color: var(--status-success-text);
+}
+
+.status-inactive {
+    background-color: var(--status-danger-bg);
+    color: var(--status-danger-text);
+}
+
+.status-pending {
+    background-color: var(--status-warning-bg);
+    color: var(--status-warning-text);
+}
+
+#productsTable {
+    width: 100%;
+}
+
+/* Sidebar styles */
+#sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    overflow: hidden;
+}
+
+.sidebar-collapsed {
+    width: var(--sidebar-width-collapsed);
+}
+
+.sidebar-collapsed:hover {
+    width: var(--sidebar-width-expanded);
+}
+
+.sidebar-expanded {
+    width: var(--sidebar-width-expanded) !important;
+}
+
+.sidebar-collapsed .text-expandable {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+}
+
+.sidebar-collapsed:hover .text-expandable,
+.sidebar-expanded .text-expandable {
+    opacity: 1;
+    width: auto;
+    transition: opacity 0.3s ease, width 0.3s ease;
+}
+
+#main-content {
+    transition: margin-left 0.3s ease;
+}
+
+@media (min-width: 768px) {
+    #main-content {
+        margin-left: var(--sidebar-width-collapsed);
+    }
+
+    .sidebar-collapsed:hover~#main-content,
+    .sidebar-expanded~#main-content {
+        margin-left: var(--sidebar-width-expanded);
+    }
+}
+
+@media (max-width: 768px) {
+    #sidebarToggleMode {
+        display: none !important;
+    }
+}
+
+@media (max-width: 768px) {
+    #sidebar {
+        width: var(--sidebar-width-expanded) !important;
+        overscroll-behavior: contain;
+        padding-bottom: 5rem;
+        scrollbar-gutter: stable both-edges;
+    }
+
+    .text-expandable {
+        opacity: 1 !important;
+        width: auto !important;
+    }
+
+    .tabulator-search-input {
+        width: 100% !important;
+    }
+}
+
+/* SweetAlert responsive fix */
+.swal2-container {
+    padding: 0 10px !important;
+}
+
+/* Toggle Switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 22px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: #d1d5db;
+    border-radius: 34px;
+    transition: .3s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    border-radius: 50%;
+    transition: .3s;
+}
+
+input:checked+.slider {
+    background-color: #4ade80;
+}
+
+input:checked+.slider:before {
+    transform: translateX(22px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+/* Show when parent is open */
+.relative.submenu-open .submenu {
+    display: block;
+}
+
+/* Submenu hide/show & animation */
+.relative .submenu {
+    display: none;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease, opacity 0.25s ease;
+    opacity: 0;
+}
+
+.relative.submenu-open .submenu,
+.relative .submenu.submenu-open {
+    display: block;
+    max-height: 1000px;
+    opacity: 1;
+}
+
+.relative.submenu-open>a .fa-chevron-down,
+.relative>a .fa-chevron-down.open {
+    transform: rotate(180deg);
+    transition: transform 0.2s ease;
+}
+
+/* Bulk Actions Bar */
+#bulkActionsBar {
+    animation: slideUp 0.3s ease-out;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 5px 10px rgba(0, 0, 0, 0.05);
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translate(-50%, 100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}
+
+/* Select All checkbox */
+#selectAll:indeterminate {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    #bulkActionsBar {
+        width: calc(100% - 2rem);
+        margin: 0 1rem;
+        padding: 0.75rem;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    #bulkActionsBar>div {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: stretch;
+    }
+
+    #bulkActionsBar .hidden.sm\\:block {
+        display: none;
+    }
+
+    #bulkActionsBar .flex.space-x-2 {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    #bulkActionsBar .flex.space-x-2 button {
+        flex: 1;
+    }
+}
+
+/* Row selection styling */
+.row-check:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Bulk delete modal styling */
+.mobile-swal .swal2-content {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.mobile-swal .swal2-actions {
+    margin-top: 1.5rem;
+}
+
+@media (max-width: 768px) {
+
+    #sidebar .text-expandable,
+    #sidebar .fa-chevron-down,
+    #sidebar .parent-link i {
+        opacity: 1 !important;
+        color: var(--primary-color) !important;
+    }
+}
+
+#sidebar {
+    touch-action: pan-y;
+    overflow-y: auto !important;
+}
+
+@media (max-width: 768px) {
+    #sidebar nav {
+        padding-bottom: 6rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .switch {
+        transform: scale(0.8);
+        transform-origin: left;
+    }
+}
+
+/* ----------------------------------------------------
+   DATA TABLES (DataTables + Tabulator)
+---------------------------------------------------- */
+
+/* Buttons (Export / Column Visibility) */
+.dt-buttons .dt-button {
+    background: var(--surface-card) !important;
+    border: 2px solid var(--border-color) !important;
+    padding: 8px 16px !important;
+    border-radius: 10px !important;
+    font-size: 14px !important;
+    color: var(--text-secondary) !important;
+    transition: 0.2s;
+}
+
+.dt-buttons .dt-button:hover {
+    background: var(--primary-gradient) !important;
+    color: white !important;
+    border-color: transparent !important;
+}
+
+/* Dropdown panel */
+.dt-button-collection {
+    background: white !important;
+    border-radius: 12px !important;
+    padding: 6px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Reviews table special rules */
+#reviewsTable td:nth-child(3),
+#reviewsTable td:nth-child(4),
+#reviewsTable td:nth-child(6) {
+    white-space: normal !important;
+}
+
+#reviewsTable td:nth-child(6) {
+    max-width: 300px !important;
+}
+
+.status-badge {
+    padding: 4px 12px !important;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-active {
+    background: var(--status-success-bg);
+    color: var(--status-success-text);
+}
+
+.status-pending {
+    background: var(--status-warning-bg);
+    color: var(--status-warning-text);
+}
+
+.status-inactive {
+    background: var(--status-danger-bg);
+    color: var(--status-danger-text);
+}
+
+/* Tabulator styling */
+.tabulator {
+    background-color: white;
+    border: none;
+    font-family: var(--font-main);
+}
+
+.tabulator .tabulator-header {
+    background: var(--primary-gradient) !important;
+    color: #fff !important;
+    border: none;
+}
+
+.tabulator .tabulator-header .tabulator-col {
+    border: none;
+    background: none;
+}
+
+.tabulator .tabulator-header .tabulator-col .tabulator-col-content {
+    padding: 16px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.5px;
+    white-space: nowrap !important;
+}
+
+.tabulator .tabulator-tableholder {
+    background: #fff;
+}
+
+.tabulator .tabulator-tableholder .tabulator-table {
+    background: #fff;
+}
+
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row {
+    border-bottom: 1px solid #f3f4f6 !important;
+    background: #fff !important;
+}
+
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell {
+    padding: 14px 16px !important;
+    font-size: 14px !important;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    border: none !important;
+}
+
+.tabulator-row.tabulator-selected {
+    background-color: #f3f4f6 !important;
+}
+
+/* Pagination */
+.tabulator .tabulator-footer {
+    border-top: 1px solid var(--border-color);
+    background: #fff;
+}
+
+.tabulator .tabulator-footer .tabulator-paginator {
+    color: var(--text-muted);
+}
+
+.tabulator .tabulator-footer .tabulator-page {
+    border: 2px solid var(--border-color) !important;
+    background: #fff !important;
+    color: var(--text-secondary) !important;
+    padding: 8px 14px !important;
+    border-radius: 10px !important;
+    margin: 0 4px;
+    transition: 0.2s ease;
+}
+
+.tabulator .tabulator-footer .tabulator-page:hover {
+    border-color: var(--primary-color) !important;
+    background: #f9fafb !important;
+    color: var(--primary-color) !important;
+}
+
+.tabulator .tabulator-footer .tabulator-page.active {
+    background: var(--primary-gradient) !important;
+    color: white !important;
+    border-color: transparent !important;
+}
+
+.tabulator .tabulator-footer .tabulator-page-size {
+    border: 2px solid var(--border-color) !important;
+    border-radius: 10px !important;
+    padding: 8px 32px 8px 12px !important;
+    background: #fff !important;
+    font-size: 14px !important;
+}
+
+/* Column selectability */
+.tabulator .tabulator-col.tabulator-col-selectable,
+.tabulator .tabulator-table .tabulator-cell.tabulator-cell-selectable {
+    text-align: center;
+}
+
+/* Header filters */
+.tabulator-header input,
+.tabulator-header select {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 13px;
+    color: #111 !important;
+}
+
+.tabulator-header input::placeholder {
+    color: var(--text-muted) !important;
+}
+
+.tabulator-header input:focus,
+.tabulator-header select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px #c7d2fe;
+}
+
+/* Hover effect on header */
+.tabulator .tabulator-header .tabulator-col:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    cursor: pointer;
+}
+
+/* Search input (global toolbar) */
+.tabulator-search-input {
+    width: 260px !important;
+    padding: 10px 16px !important;
+    font-size: 14px !important;
+    border: 2px solid var(--border-color) !important;
+    border-radius: 12px !important;
+    background: #fff !important;
+    color: var(--text-secondary) !important;
+    transition: 0.3s ease !important;
+}
+
+.tabulator-search-input:focus {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Horizontal scroll fix */
+.tabulator .tabulator-tableholder {
+    overflow-x: auto !important;
+}

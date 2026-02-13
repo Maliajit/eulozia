@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\View;
+use App\Models\Category;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +21,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        View::composer('customer.partials.header', function ($view) {
+            $headerCategories = Category::where('status', 1)
+                ->orderBy('sort_order', 'asc')
+                ->take(5)
+                ->get();
+            $view->with('headerCategories', $headerCategories);
+        });
     }
 }

@@ -1,39 +1,178 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\AccountController;
-use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\Customer\AuthController as CustomerAuth;
+use App\Http\Controllers\Customer\HomeController as CustomerHome;
+use App\Http\Controllers\Customer\ProductController as CustomerProduct;
+use App\Http\Controllers\Customer\CartController as CustomerCart;
+use App\Http\Controllers\Customer\CheckoutController as CustomerCheckout;
+use App\Http\Controllers\Customer\WishlistController as CustomerWishlist;
+use App\Http\Controllers\Customer\PageController as CustomerPage;
+use App\Http\Controllers\Customer\AccountController as CustomerAccount;
+use App\Http\Controllers\Customer\OrderController as CustomerOrder;
+use App\Http\Controllers\Customer\ReviewController;
 
-Route::get('/', [HomeController::class, 'index'])->name('home');
+/*
+|--------------------------------------------------------------------------
+| HOME PAGE
+|--------------------------------------------------------------------------
+*/
+// Map '/' to the customer home controller
+Route::name('customer.')->group(function() {
+    Route::get('/', [CustomerHome::class, 'index'])->name('home');
+    Route::get('/home', [CustomerHome::class, 'index'])->name('home.index');
+});
 
+/*
+|--------------------------------------------------------------------------
+| AUTHENTICATION
+|--------------------------------------------------------------------------
+*/
+// Guest Routes
+Route::middleware('guest')->name('customer.')->group(function() {
+    Route::get('/login', [CustomerAuth::class, 'loginPage'])->name('login');
+    Route::post('/login', [CustomerAuth::class, 'login'])->name('login.submit');
+    Route::get('/register', [CustomerAuth::class, 'registerPage'])->name('register');
+    Route::post('/register', [CustomerAuth::class, 'register'])->name('register.submit');
+    Route::get('/forgot-password', [CustomerAuth::class, 'showForgotPassword'])->name('forgot-password');
+});
+
+// Authenticated Routes
+Route::middleware('customer.auth')->name('customer.')->group(function() {
+    Route::post('/logout', [CustomerAuth::class, 'logout'])->name('logout');
+    Route::get('/verify', [CustomerAuth::class, 'verifyPage'])->name('verify');
+    Route::post('/verify', [CustomerAuth::class, 'verify'])->name('verify.submit');
+    Route::post('/resend-otp', [CustomerAuth::class, 'resendOTP'])->name('otp.resend');
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| PRODUCTS
+|--------------------------------------------------------------------------
+*/
 Route::prefix('products')->group(function () {
-    Route::get('/', [ProductController::class, 'index'])->name('products.index'); // maps to listing.blade.php
-    Route::get('/search', [ProductController::class, 'search'])->name('products.search');
-    Route::get('/category/{slug}', [ProductController::class, 'category'])->name('products.category');
-    Route::get('/{id}', [ProductController::class, 'show'])->name('products.show'); // maps to details.blade.php
+    // Listing
+    Route::get('/', [CustomerProduct::class, 'listing'])->name('products.index');
+    Route::get('/list', [CustomerProduct::class, 'listing'])->name('products.list'); // Alias
+
+    // Search
+    Route::get('/search', [CustomerProduct::class, 'search'])->name('products.search');
+
+    // Category
+    Route::get('/category/{slug}', [CustomerProduct::class, 'category'])->name('products.category');
+    Route::get('/cat/{slug}', [CustomerProduct::class, 'category'])->name('category.products'); // Alias
+
+    // Quick View
+    Route::get('/{slug}/quick-view', [CustomerProduct::class, 'quickView'])->name('products.quick-view');
+
+    // Details - MUST BE LAST to avoid matching 'search' or 'category' as slug
+    // We Map 'products.show' (expects id) and 'products.details' (expects slug) to the same controller method
+    // The details method is updated/serviced to handle both ID and Slug.
+    Route::get('/{slug}', [CustomerProduct::class, 'details'])->name('products.show');
+    Route::get('/details/{slug}', [CustomerProduct::class, 'details'])->name('products.details'); // Alias
+    
+    // Reviews
+    Route::post('/{id}/reviews', [ReviewController::class, 'store'])->name('products.reviews.store');
 });
 
-Route::prefix('account')->middleware('auth')->group(function () {
-    Route::get('/', [AccountController::class, 'index'])->name('account.index'); // profile.blade.php
-    Route::get('/profile', [AccountController::class, 'profile'])->name('account.profile');
-    Route::get('/orders', [AccountController::class, 'orders'])->name('account.orders');
-    Route::get('/orders/{id}', [AccountController::class, 'orderDetails'])->name('account.order_details');
-    Route::get('/addresses', [AccountController::class, 'addresses'])->name('account.addresses');
+
+/*
+|--------------------------------------------------------------------------
+| CART
+|--------------------------------------------------------------------------
+*/
+Route::prefix('cart')->name('cart.')->group(function () {
+    Route::get('/', [CustomerCart::class, 'index'])->name('index'); // Matches route('cart.index')? 
+    // Navbar used 'route('cart.index')'? Nonav used just icons. 
+    // Let's check web.php old: name('cart') and name('cart.index')?
+    // Old used name('cart'). New web.php used name('cart.index').
+    Route::get('/view', [CustomerCart::class, 'index'])->name('index'); // Alias
+
+    Route::post('/add', [CustomerCart::class, 'addItem'])->name('add');
+    Route::put('/update/{cartItemId}', [CustomerCart::class, 'updateQuantity'])->name('update');
+    Route::delete('/remove/{cartItemId}', [CustomerCart::class, 'removeItem'])->name('remove');
+    Route::post('/apply-coupon', [CustomerCart::class, 'applyCoupon'])->name('apply-coupon');
+    Route::post('/remove-coupon', [CustomerCart::class, 'removeCoupon'])->name('remove-coupon');
+    Route::post('/sync', [CustomerCart::class, 'syncCart'])->name('sync');
+    Route::get('/summary', [CustomerCart::class, 'getCartSummary'])->name('summary');
+    Route::get('/count', [CustomerCart::class, 'getCartCount'])->name('count');
+    Route::delete('/clear', [CustomerCart::class, 'clearCart'])->name('clear');
 });
 
-Route::prefix('checkout')->group(function () {
-    Route::get('/', [CheckoutController::class, 'index'])->name('checkout.index');
-    Route::get('/payment', [CheckoutController::class, 'payment'])->name('checkout.payment');
-    Route::get('/confirmation', [CheckoutController::class, 'confirmation'])->name('checkout.confirmation');
+
+/*
+|--------------------------------------------------------------------------
+| CHECKOUT
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['throttle:5,1'])->prefix('checkout')->name('checkout.')->group(function () {
+    Route::get('/', [CustomerCheckout::class, 'index'])->name('index');
+    Route::post('/shipping/check', [CustomerCheckout::class, 'checkShipping'])->name('shipping.check');
+
+    Route::middleware(['customer.auth'])->group(function () {
+        Route::post('/process', [CustomerCheckout::class, 'processCheckout'])->name('process');
+        Route::post('/payment/callback', [CustomerCheckout::class, 'paymentCallback'])->name('payment.callback');
+        Route::get('/payment/failed', [CustomerCheckout::class, 'paymentFailed'])->name('payment.failed');
+        Route::get('/confirmation/{order}', [CustomerCheckout::class, 'confirmation'])->name('confirmation');
+        Route::post('/buy-now', [CustomerCheckout::class, 'buyNow'])->name('buy.now');
+        Route::post('/razorpay/order', [CustomerCheckout::class, 'createRazorpayOrder'])->name('razorpay.order');
+        Route::post('/cod', [CustomerCheckout::class, 'processCheckout'])->name('cod');
+    });
 });
 
-Route::get('/cart', function() { return view('cart.index'); })->name('cart.index');
-Route::get('/wishlist', function() { return view('wishlist.index'); })->name('wishlist.index');
 
-// Temporary Auth Routes
-Route::get('/login', [HomeController::class, 'index'])->name('login'); // Redirect to home so modal can be shown or handled via query param
-Route::post('/login', function() { return redirect()->back(); }); // Accept POST but do nothing
-Route::post('/register', function() { return redirect()->back(); })->name('register');
-Route::post('/logout', function() { return redirect()->back(); })->name('logout');
+/*
+|--------------------------------------------------------------------------
+| ACCOUNT
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['customer.auth'])->prefix('account')->name('account.')->group(function () {
+    Route::get('/', [CustomerAccount::class, 'profile'])->name('index'); // Profile is the main account page
+    Route::get('/profile', [CustomerAccount::class, 'profile'])->name('profile');
+    Route::post('/profile', [CustomerAccount::class, 'updateProfile'])->name('profile.update');
+    
+    Route::get('/orders', [CustomerOrder::class, 'orders'])->name('orders');
+    Route::get('/orders/{id}', [CustomerOrder::class, 'orderDetails'])->name('orders.details');
+    Route::get('/orders/{id}/invoice', [CustomerOrder::class, 'downloadInvoice'])->name('orders.download-invoice');
+    Route::post('/orders/{id}/cancel', [CustomerOrder::class, 'cancelOrder'])->name('orders.cancel');
+    Route::get('/orders/filter/{status}', [CustomerOrder::class, 'filterOrders'])->name('orders.filter');
+
+    Route::get('/addresses', [CustomerAccount::class, 'addresses'])->name('addresses');
+    Route::post('/addresses', [CustomerAccount::class, 'storeAddress'])->name('addresses.store');
+    Route::put('/addresses/{id}', [CustomerAccount::class, 'updateAddress'])->name('addresses.update');
+    Route::delete('/addresses/{id}', [CustomerAccount::class, 'deleteAddress'])->name('addresses.delete');
+    Route::post('/addresses/{id}/set-default', [CustomerAccount::class, 'setDefaultAddress'])->name('addresses.set-default');
+
+    Route::get('/change-password', [CustomerAccount::class, 'changePassword'])->name('change-password');
+    Route::post('/change-password', [CustomerAccount::class, 'updatePassword'])->name('change-password.update');
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| WISHLIST
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['customer.auth'])->prefix('wishlist')->name('wishlist.')->group(function () {
+    Route::get('/', [CustomerWishlist::class, 'index'])->name('index');
+    Route::post('/toggle', [CustomerWishlist::class, 'toggle'])->name('toggle');
+    Route::get('/check/{productId}', [CustomerWishlist::class, 'check'])->name('check');
+    Route::post('/add', [CustomerWishlist::class, 'add'])->name('add');
+    Route::post('/remove', [CustomerWishlist::class, 'remove'])->name('remove');
+    // ... other wishlist routes can be added if needed
+});
+
+/*
+|--------------------------------------------------------------------------
+| STATIC PAGES & FALLBACK
+|--------------------------------------------------------------------------
+*/
+Route::prefix('page')->group(function () {
+    Route::get('/{slug}', [CustomerPage::class, 'show'])->name('page.show');
+});
+
+// Fallback
+Route::fallback(function () {
+    return view('customer.errors.404');
+});

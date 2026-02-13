@@ -8,26 +8,26 @@ class AccountController extends Controller
 {
     public function index()
     {
-        return view('account.profile');
+        return view('customer.account.profile');
     }
 
     public function profile()
     {
-        return view('account.profile');
+        return view('customer.account.profile');
     }
 
     public function orders()
     {
-        return view('account.orders');
+        return view('customer.account.orders');
     }
 
     public function orderDetails($id)
     {
-        return view('account.orderdetails', compact('id'));
+        return view('customer.account.orderdetails', compact('id'));
     }
 
     public function addresses()
     {
-        return view('account.addresses');
+        return view('customer.account.addresses');
     }
 }

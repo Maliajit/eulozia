@@ -1,0 +1,76 @@
+/* Deprecated: admin.css is the single source of truth. This file is no longer loaded. */
+/**
+ * Admin Panel Theme Configuration
+ * 
+ * This file centralizes all visual styling variables for the universal admin panel.
+ * Changing values here will update the primary colors, gradients, and typography
+ * across the entire application without needing to touch individual component files.
+ * 
+ * Purpose: Single point of control for branding and theming.
+ * Usage: This file must be loaded before any other custom CSS files.
+ */
+
+:root {
+    /* Primary Branding Colors */
+    --primary-color: #6366f1;
+    /* Indigo-500 */
+    --primary-light: #818cf8;
+    --primary-dark: #4f46e5;
+    --primary-brand-start: #6366f1;
+    /* Used in gradients */
+    --primary-brand-end: #9333ea;
+    /* Used in gradients (Purple-600) */
+    --primary-gradient: linear-gradient(135deg, var(--primary-brand-start) 0%, var(--primary-brand-end) 100%);
+    --primary-shadow: rgba(99, 102, 241, 0.25);
+    --primary-shadow-hover: rgba(99, 102, 241, 0.4);
+
+    /* Secondary Branding Colors */
+    --secondary-color: #6b7280;
+    /* Gray-500 */
+    --secondary-gradient: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+
+    /* Semantic Colors */
+    --success-color: #10b981;
+    /* Emerald-500 */
+    --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+
+    --danger-color: #ef4444;
+    /* Red-500 */
+    --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+
+    --warning-color: #f59e0b;
+    /* Amber-500 */
+    --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    --warning-light: #fef3c7;
+    /* Amber-100 for badges */
+
+    /* Status Badge Backgrounds */
+    --status-success-bg: #d1fae5;
+    --status-success-text: #065f46;
+    --status-danger-bg: #fee2e2;
+    --status-danger-text: #991b1b;
+    --status-warning-bg: #fef3c7;
+    --status-warning-text: #92400e;
+    --status-info-bg: #e0e7ff;
+    --status-info-text: #3730a3;
+
+    /* Backgrounds & Surfaces */
+    --bg-main: #f9fafb;
+    /* Gray-50 */
+    --surface-card: #ffffff;
+    --border-color: rgba(0, 0, 0, 0.1);
+
+    /* Sidebar Variables */
+    --sidebar-bg: #ffffff;
+    --sidebar-text: #4b5563;
+    --sidebar-active-bg: #f3f4f6;
+    --sidebar-active-text: #6366f1;
+    --sidebar-width-expanded: 16rem;
+    --sidebar-width-collapsed: 6rem;
+
+    /* Typography */
+    --font-main: 'Inter', sans-serif;
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-muted: #9ca3af;
+}

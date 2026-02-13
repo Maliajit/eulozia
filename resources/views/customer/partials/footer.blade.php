@@ -9,8 +9,10 @@
             <div>
                 <h4 class="font-semibold mb-4">Quick Links</h4>
                 <ul class="space-y-2">
-                    <li><a href="{{ route('customer.home') }}" class="text-secondary transition-colors duration-300">Home</a></li>
-                    <li><a href="{{ route('products.index') }}" class="text-secondary transition-colors duration-300">Products</a></li>
+                    <li><a href="{{ route('customer.home') }}"
+                            class="text-secondary transition-colors duration-300">Home</a></li>
+                    <li><a href="{{ route('customer.products.index') }}"
+                            class="text-secondary transition-colors duration-300">Products</a></li>
                     <li><a href="#" class="text-secondary transition-colors duration-300">About Us</a></li>
                     <li><a href="#" class="text-secondary transition-colors duration-300">Contact</a></li>
                 </ul>
@@ -19,10 +21,8 @@
             <div>
                 <h4 class="font-semibold mb-4">Categories</h4>
                 <ul class="space-y-2">
-                    <li><a href="{{ route('products.index', ['category' => 'hoodies']) }}" class="text-secondary transition-colors duration-300">Hoodies</a></li>
-                    <li><a href="{{ route('products.index', ['category' => 'tshirts']) }}" class="text-secondary transition-colors duration-300">T-Shirts</a></li>
-                    <li><a href="{{ route('products.index', ['category' => 'pants']) }}" class="text-secondary transition-colors duration-300">Pants</a></li>
-                    <li><a href="{{ route('products.index', ['category' => 'accessories']) }}" class="text-secondary transition-colors duration-300">Accessories</a></li>
+                    <li><a href="{{ route('customer.products.index', ['category' => 'accessories']) }}"
+                            class="text-secondary transition-colors duration-300">Accessories</a></li>
                 </ul>
             </div>
 

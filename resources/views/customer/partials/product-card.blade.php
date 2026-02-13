@@ -2,7 +2,7 @@
     <div class="relative overflow-hidden flex-shrink-0">
         <div class="product-carousel relative h-80 bg-gray-700" data-current-slide="0">
             <!-- Product Images -->
-            <a href="{{ route('products.show', ['slug' => $product['slug']]) }}">
+            <a href="{{ route('customer.products.show', ['slug' => $product['slug']]) }}">
                 <div class="carousel-images flex transition-transform duration-500 ease-in-out h-full">
                     @if(!empty($product['images']))
                         @foreach ($product['images'] as $image)
@@ -52,7 +52,7 @@
 
     <div class="p-4 flex-1 flex flex-col">
         <h3 class="product-title font-semibold mb-1 text-sm md:text-base">
-            <a href="{{ route('products.show', ['slug' => $product['slug']]) }}" class="hover:text-accent transition-colors duration-300">
+            <a href="{{ route('customer.products.show', ['slug' => $product['slug']]) }}" class="hover:text-accent transition-colors duration-300">
                 {{ $product['name'] }}
             </a>
         </h3>

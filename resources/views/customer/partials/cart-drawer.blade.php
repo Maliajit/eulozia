@@ -4,14 +4,16 @@
     <div class="absolute inset-0 bg-black bg-opacity-50" id="cartBackdrop"></div>
 
     <!-- Drawer -->
-    <div class="absolute right-0 top-0 h-full w-full max-w-md bg-primary shadow-xl transform transition-transform duration-300 translate-x-full flex flex-col">
+    <div
+        class="absolute right-0 top-0 h-full w-full max-w-md bg-primary shadow-xl transform transition-transform duration-300 translate-x-full flex flex-col">
         <!-- HEADER (Fixed Top) -->
         <div class="border-b border-gray-700 p-4 flex-shrink-0 bg-primary sticky top-0 z-10">
             <div class="flex items-center justify-between">
                 <h2 class="text-xl font-bold text-secondary">Shopping Cart (0)</h2>
                 <button id="closeCart" class="text-secondary hover:text-accent transition-colors duration-300">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
                     </svg>
                 </button>
             </div>
@@ -32,8 +34,9 @@
                 <span class="text-secondary font-bold text-lg">Total Payable</span>
                 <span class="text-secondary font-bold text-lg">₹0</span>
             </div>
-            <a href="{{ route('checkout.index') }}">
-                <button class="w-full bg-accent text-primary py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 transition mb-3">
+            <a href="{{ route('customer.checkout.index') }}">
+                <button
+                    class="w-full bg-accent text-primary py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 transition mb-3">
                     PROCEED TO BUY
                 </button>
             </a>
@@ -45,10 +48,10 @@
     async function openCart() {
         const modal = document.getElementById('cartModal');
         const drawer = modal.querySelector('.transform');
-        
+
         // Fetch and render initial data
         await fetchCart();
-        
+
         modal.classList.remove('hidden');
         setTimeout(() => drawer.classList.remove('translate-x-full'), 10);
         document.body.style.overflow = 'hidden';
@@ -56,7 +59,7 @@
 
     async function fetchCart() {
         try {
-            const response = await axios.get("{{ route('cart.summary') }}");
+            const response = await axios.get("{{ route('customer.cart.summary') }}");
             if (response.data.success) {
                 renderCart(response.data.data);
             }
@@ -69,12 +72,12 @@
         const contentContainer = document.querySelector('#cartModal .overflow-y-auto');
         const countHeader = document.querySelector('#cartModal h2');
         const totalDisplay = document.querySelector('#cartModal .justify-between .text-lg:last-child');
-        
+
         if (!contentContainer || !cart) return;
 
         // Update Header Count
         if (countHeader) countHeader.textContent = `Shopping Cart (${cart.items_count || 0})`;
-        
+
         // Update Total
         if (totalDisplay) totalDisplay.textContent = `₹${(cart.grand_total || 0).toLocaleString('en-IN')}`;
 
@@ -93,7 +96,7 @@
                 }
                 attributesHtml += '</div>';
             }
-            
+
             html += `
                 <div class="flex gap-4 border-b border-gray-800 pb-4 last:border-0" data-item-id="${item.id}">
                     <div class="w-20 h-20 flex-shrink-0 bg-gray-800 rounded overflow-hidden">
@@ -166,13 +169,15 @@
     document.addEventListener('DOMContentLoaded', () => {
         const backdrop = document.getElementById('cartBackdrop');
         const closeBtn = document.getElementById('closeCart');
-        if(backdrop) backdrop.addEventListener('click', closeCart);
-        if(closeBtn) closeBtn.addEventListener('click', closeCart);
+        if (backdrop) backdrop.addEventListener('click', closeCart);
+        if (closeBtn) closeBtn.addEventListener('click', closeCart);
         document.addEventListener('keydown', e => e.key === 'Escape' && closeCart());
     });
     window.openCart = openCart;
 </script>
 
 <style>
-    .transform { transition: transform 0.3s ease-in-out; }
+    .transform {
+        transition: transform 0.3s ease-in-out;
+    }
 </style>

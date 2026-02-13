@@ -30,7 +30,7 @@
                             viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
-                        <a href="{{ route('cart.index') }}" class="ml-2 text-secondary transition-colors duration-300">Cart</a>
+                        <a href="{{ route('customer.cart.index') }}" class="ml-2 text-secondary transition-colors duration-300">Cart</a>
                     </li>
                     <li class="flex items-center" aria-current="page">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500" fill="none"
@@ -374,7 +374,7 @@
         }
 
         function checkShipping(pincode) {
-            fetch('{{ route("checkout.shipping.check") }}', {
+            fetch('{{ route("customer.checkout.shipping.check") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -427,7 +427,7 @@
 
         function handleAuthError() {
             // Redirect to login with intended URL
-            window.location.href = '{{ route("customer.login") }}?redirect={{ route("checkout.index") }}';
+            window.location.href = '{{ route("customer.login") }}?redirect={{ route("customer.checkout.index") }}';
         }
 
         function processCheckout(method) {
@@ -436,7 +436,7 @@
             data.payment_method = method;
             data.terms_agree = 1;
 
-            fetch('{{ route("checkout.process") }}', {
+            fetch('{{ route("customer.checkout.process") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -459,7 +459,7 @@
             .then(data => {
                 if (data && data.success) {
                     sessionStorage.removeItem('checkout_form_data');
-                    window.location.href = '{{ route("checkout.index") }}/confirmation/' + data.order.id;
+                    window.location.href = '{{ route("customer.checkout.index") }}/confirmation/' + data.order.id;
                 } else if (data && data.message) {
                     alert(data.message);
                 }
@@ -472,7 +472,7 @@
             const data = Object.fromEntries(formData.entries());
             data.payment_method = 'online';
 
-            fetch('{{ route("checkout.razorpay.order") }}', {
+            fetch('{{ route("customer.checkout.razorpay.order") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -516,7 +516,7 @@
         }
 
         function submitPaymentResponse(paymentResponse) {
-            fetch('{{ route("checkout.payment.callback") }}', {
+            fetch('{{ route("customer.checkout.payment.callback") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

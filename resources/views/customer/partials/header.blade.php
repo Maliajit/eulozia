@@ -19,7 +19,7 @@
         <!-- Left: Navigation Links (Desktop) -->
         <nav class="hidden md:flex space-x-8">
             @foreach($headerCategories as $category)
-                <a href="{{ route('products.index', ['category' => $category->slug]) }}"
+                <a href="{{ route('customer.products.index', ['category' => $category->slug]) }}"
                     class="hover:text-accent transition-colors duration-300">{{ $category->name }}</a>
             @endforeach
         </nav>
@@ -51,7 +51,7 @@
                 </svg>
             </button>
             @auth('customer')
-                <a href="{{ route('account.index') }}" class="hover:text-accent transition-colors duration-300">
+                <a href="{{ route('customer.account.index') }}" class="hover:text-accent transition-colors duration-300">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -85,7 +85,7 @@
     <div id="mobile-menu" class="md:hidden mt-4 py-4 border-t border-gray-800 hidden">
         <nav class="flex flex-col space-y-4">
             @foreach($headerCategories as $category)
-                <a href="{{ route('products.index', ['category' => $category->slug]) }}"
+                <a href="{{ route('customer.products.index', ['category' => $category->slug]) }}"
                     class="hover:text-accent transition-colors duration-300 py-2">{{ $category->name }}</a>
             @endforeach
         </nav>
@@ -94,7 +94,7 @@
     <!-- Search Bar -->
     <div id="search-bar" class="hidden mt-4">
         <div class="container mx-auto">
-            <form action="{{ route('products.index') }}" method="GET" class="flex">
+            <form action="{{ route('customer.products.index') }}" method="GET" class="flex">
                 <input type="text" name="search" placeholder="Search products..."
                     class="flex-1 bg-gray-800 text-secondary px-4 py-2 rounded-l focus:outline-none focus:ring-2 focus:ring-accent">
                 <button type="submit"

@@ -42,11 +42,20 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
+        $loginField = $request->input('email');
+        $loginType = filter_var($loginField, FILTER_VALIDATE_EMAIL) ? 'email' : 'mobile';
+
+        $rules = [
+            'email' => 'required',
             'password' => 'required|min:4'
-        ], [
-            'email.required' => 'Email address is required',
+        ];
+
+        if ($loginType === 'email') {
+            $rules['email'] .= '|email';
+        }
+
+        $validator = Validator::make($request->all(), $rules, [
+            'email.required' => 'Email or Phone is required',
             'email.email' => 'Please enter a valid email address',
             'password.required' => 'Password is required',
             'password.min' => 'Password must be at least 4 characters'
@@ -59,7 +68,10 @@ class AuthController extends Controller
                 ->with('form', 'login');
         }
 
-        $credentials = $request->only('email', 'password');
+        $credentials = [
+            $loginType => $loginField,
+            'password' => $request->password
+        ];
         $remember = $request->has('remember');
 
         if (Auth::guard('customer')->attempt($credentials, $remember)) {
@@ -80,6 +92,7 @@ class AuthController extends Controller
             return redirect()->intended(route('customer.home.index'))
                 ->with('success', 'Welcome back, ' . $customer->name . '!');
         }
+
 
         return redirect()->back()
             ->withErrors(['email' => 'Invalid email or password. Please try again.'])
@@ -135,13 +148,13 @@ class AuthController extends Controller
 
         // Auto Login
         Auth::guard('customer')->login($customer);
-        
+
         // Sync cart immediately
         $this->cartHelper->syncCart();
 
         // Redirect intended or Verify
         if (session()->has('url.intended')) {
-             return redirect()->intended(route('customer.home.index'))
+            return redirect()->intended(route('customer.home.index'))
                 ->with('success', 'Registration successful! Welcome, ' . $customer->name . '!');
         }
 
@@ -186,17 +199,17 @@ class AuthController extends Controller
         // 1. If Logged In, allow access
         if (Auth::guard('customer')->check()) {
             $customer = Auth::guard('customer')->user();
-            
+
             // If already verified, go home
             if ($customer->email_verified_at) {
                 return redirect()->intended(route('customer.home.index'));
             }
-            
+
             // If session keys missing, restore them for the view
             if (!session()->has('email')) {
                 session(['email' => $customer->email]);
             }
-            
+
             return view('customer.auth.verify');
         }
 
@@ -310,7 +323,7 @@ class AuthController extends Controller
 
             // Auto login
             Auth::guard('customer')->login($customer);
-            
+
             // Sync cart immediately after verification login
             $this->cartHelper->syncCart();
 
@@ -358,13 +371,13 @@ class AuthController extends Controller
             $verificationData['attempts'] = 0;
             Cache::put($verificationKey, $verificationData, 300);
         }
-        
+
         // Send OTP via Email
         try {
             Mail::to($email)->send(new OTPVerify($newEmailOTP));
         } catch (\Exception $e) {
             \Log::error('OTP Resend Email failed: ' . $e->getMessage());
-             return response()->json([
+            return response()->json([
                 'success' => false,
                 'message' => 'Failed to send email. Please try again.'
             ], 500);
@@ -419,7 +432,7 @@ class AuthController extends Controller
 
         // Clear old cache
         Cache::forget('email_otp_' . $oldEmail);
-        
+
         // Update Session
         session(['email' => $customer->email]);
 

@@ -1,19 +1,19 @@
 @php
-/**
- * Media Library Manager
- * 
- * Purpose: Centralized asset management for images and documents across the platform.
- * 
- * Data Flow: 
- * - Output: High-performance list with previews via Tabulator.
- * - Processing: Chunked/Multi-file uploads with automated thumbnail generation.
- * - Integration: Integrated with product and category modules via media picker.
- * 
- * Database: 
- * - `media`: Tracks physical file paths, metadata, and alt text.
- * 
- * Dependencies: Tabulator, Axios, SortableJS, SweetAlert2, Toastr.
- */
+    /**
+     * Media Library Manager
+     * 
+     * Purpose: Centralized asset management for images and documents across the platform.
+     * 
+     * Data Flow: 
+     * - Output: High-performance list with previews via Tabulator.
+     * - Processing: Chunked/Multi-file uploads with automated thumbnail generation.
+     * - Integration: Integrated with product and category modules via media picker.
+     * 
+     * Database: 
+     * - `media`: Tracks physical file paths, metadata, and alt text.
+     * 
+     * Dependencies: Tabulator, Axios, SortableJS, SweetAlert2, Toastr.
+     */
 @endphp
 {{-- resources/views/admin/media/index.blade.php --}}
 @extends('admin.layouts.master')
@@ -196,8 +196,7 @@
             </div>
             <div class="p-4 overflow-auto max-h-[calc(90vh-100px)]">
                 <div class="text-center">
-                    <img id="previewImage" src="" alt=""
-                        class="max-w-full max-h-[70vh] mx-auto rounded-lg hidden">
+                    <img id="previewImage" src="" alt="" class="max-w-full max-h-[70vh] mx-auto rounded-lg hidden">
                     <div id="previewNonImage" class="hidden">
                         <div class="w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                             <i class="fas fa-file text-gray-400 text-6xl"></i>
@@ -342,7 +341,7 @@
         let currentSearch = '';
 
         // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             console.log('Media module initialized');
 
             // Initialize Tabulator table
@@ -400,7 +399,7 @@
             // Search with debounce
             const searchInput = document.getElementById('searchInput');
             let searchTimeout;
-            searchInput.addEventListener('keyup', function() {
+            searchInput.addEventListener('keyup', function () {
                 clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(() => {
                     currentSearch = this.value;
@@ -411,7 +410,7 @@
 
             // Sort options
             document.querySelectorAll('.sort-option').forEach(option => {
-                option.addEventListener('click', function() {
+                option.addEventListener('click', function () {
                     currentSort = this.getAttribute('data-sort');
                     currentPage = 1;
 
@@ -436,13 +435,13 @@
             });
 
             // Toggle sort menu
-            document.getElementById('sortBtn').addEventListener('click', function(e) {
+            document.getElementById('sortBtn').addEventListener('click', function (e) {
                 e.stopPropagation();
                 document.getElementById('sortMenu').classList.toggle('hidden');
             });
 
             // Page size change
-            document.getElementById('pageSizeSelect').addEventListener('change', function() {
+            document.getElementById('pageSizeSelect').addEventListener('change', function () {
                 perPage = parseInt(this.value);
                 currentPage = 1;
                 loadMediaData();
@@ -454,7 +453,7 @@
             });
 
             // Close modals on outside click
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', function (e) {
                 const previewModal = document.getElementById('previewModal');
                 if (!previewModal.classList.contains('hidden') && e.target === previewModal) {
                     hidePreview();
@@ -471,7 +470,7 @@
             });
 
             // Close modals on escape key
-            document.addEventListener('keydown', function(e) {
+            document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape') {
                     const previewModal = document.getElementById('previewModal');
                     if (!previewModal.classList.contains('hidden')) {
@@ -490,112 +489,112 @@
                 responsiveLayout: "hide",
                 selectable: 1,
                 columns: [{
-                        title: "<input type='checkbox' id='selectAllMedia'>",
-                        field: "id",
-                        formatter: "rowSelection",
-                        titleFormatter: "rowSelection",
-                        hozAlign: "center",
-                        headerSort: false,
-                        width: 50,
-                        cssClass: "select-checkbox"
-                    },
-                    {
-                        title: "Preview",
-                        field: "thumbnail_url",
-                        width: 80,
-                        hozAlign: "center",
-                        headerSort: false,
-                        formatter: function(cell) {
-                            const data = cell.getRow().getData();
-                            return `
-                                <div class="w-12 h-12 mx-auto overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center cursor-pointer hover:opacity-90" onclick="previewMedia(${data.id})">
-                                    ${data.mime_type.startsWith('image/') ?
-                                        `<img src="${data.thumbnail_url}" alt="${data.alt_text || data.file_name}" class="w-full h-full object-cover">` :
-                                        `<i class="fas fa-file text-gray-400 text-xl"></i>`
-                                    }
-                                </div>
-                            `;
-                        }
-                    },
-                    {
-                        title: "Name",
-                        field: "file_name",
-                        widthGrow: 2,
-                        formatter: function(cell) {
-                            const data = cell.getRow().getData();
-                            return `
-                                <div class="flex flex-col">
-                                    <span class="font-medium text-gray-900 truncate" title="${data.file_name}">${data.file_name}</span>
-                                    ${data.alt_text ?
-                                        `<span class="text-xs text-gray-500 truncate" title="${data.alt_text}">${data.alt_text}</span>` :
-                                        ''
-                                    }
-                                </div>
-                            `;
-                        }
-                    },
-                    {
-                        title: "Type",
-                        field: "mime_type",
-                        width: 120,
-                        formatter: function(cell) {
-                            const type = cell.getValue();
-                            const icon = type.startsWith('image/') ? 'fa-image' : 'fa-file';
-                            const color = type.startsWith('image/') ? 'text-blue-500' : 'text-gray-500';
-                            return `
-                                <div class="flex items-center space-x-2">
-                                    <i class="fas ${icon} ${color}"></i>
-                                    <span>${type.split('/')[1] || type}</span>
-                                </div>
-                            `;
-                        }
-                    },
-                    {
-                        title: "Size",
-                        field: "size_formatted",
-                        width: 100,
-                        hozAlign: "right",
-                        sorter: "number"
-                    },
-                    {
-                        title: "Uploaded",
-                        field: "created_at_formatted",
-                        width: 150,
-                        hozAlign: "center"
-                    },
-                    {
-                        title: "Actions",
-                        field: "id",
-                        width: 120,
-                        hozAlign: "center",
-                        headerSort: false,
-                        formatter: function(cell) {
-                            const id = cell.getValue();
-                            return `
-                                <div class="flex space-x-2 justify-center">
-                                   
-
-                                    <button onclick="deleteMedia(${id})"
-                                            class="p-1 text-rose-600 hover:text-rose-900 tooltip"
-                                            title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            `;
-                        }
+                    title: "<input type='checkbox' id='selectAllMedia'>",
+                    field: "id",
+                    formatter: "rowSelection",
+                    titleFormatter: "rowSelection",
+                    hozAlign: "center",
+                    headerSort: false,
+                    width: 50,
+                    cssClass: "select-checkbox"
+                },
+                {
+                    title: "Preview",
+                    field: "thumbnail_url",
+                    width: 80,
+                    hozAlign: "center",
+                    headerSort: false,
+                    formatter: function (cell) {
+                        const data = cell.getRow().getData();
+                        return `
+                                    <div class="w-12 h-12 mx-auto overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center cursor-pointer hover:opacity-90" onclick="previewMedia(${data.id})">
+                                        ${data.mime_type.startsWith('image/') ?
+                                `<img src="${data.thumbnail_url}" alt="${data.alt_text || data.file_name}" class="w-full h-full object-cover">` :
+                                `<i class="fas fa-file text-gray-400 text-xl"></i>`
+                            }
+                                    </div>
+                                `;
                     }
+                },
+                {
+                    title: "Name",
+                    field: "file_name",
+                    widthGrow: 2,
+                    formatter: function (cell) {
+                        const data = cell.getRow().getData();
+                        return `
+                                    <div class="flex flex-col">
+                                        <span class="font-medium text-gray-900 truncate" title="${data.file_name}">${data.file_name}</span>
+                                        ${data.alt_text ?
+                                `<span class="text-xs text-gray-500 truncate" title="${data.alt_text}">${data.alt_text}</span>` :
+                                ''
+                            }
+                                    </div>
+                                `;
+                    }
+                },
+                {
+                    title: "Type",
+                    field: "mime_type",
+                    width: 120,
+                    formatter: function (cell) {
+                        const type = cell.getValue();
+                        const icon = type.startsWith('image/') ? 'fa-image' : 'fa-file';
+                        const color = type.startsWith('image/') ? 'text-blue-500' : 'text-gray-500';
+                        return `
+                                    <div class="flex items-center space-x-2">
+                                        <i class="fas ${icon} ${color}"></i>
+                                        <span>${type.split('/')[1] || type}</span>
+                                    </div>
+                                `;
+                    }
+                },
+                {
+                    title: "Size",
+                    field: "size_formatted",
+                    width: 100,
+                    hozAlign: "right",
+                    sorter: "number"
+                },
+                {
+                    title: "Uploaded",
+                    field: "created_at_formatted",
+                    width: 150,
+                    hozAlign: "center"
+                },
+                {
+                    title: "Actions",
+                    field: "id",
+                    width: 120,
+                    hozAlign: "center",
+                    headerSort: false,
+                    formatter: function (cell) {
+                        const id = cell.getValue();
+                        return `
+                                    <div class="flex space-x-2 justify-center">
+
+
+                                        <button onclick="deleteMedia(${id})"
+                                                class="p-1 text-rose-600 hover:text-rose-900 tooltip"
+                                                title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                `;
+                    }
+                }
                 ],
-                rowFormatter: function(row) {
+                rowFormatter: function (row) {
                     const rowEl = row.getElement();
                     rowEl.classList.add('hover:bg-gray-50');
                 },
-                rowSelectionChanged: function(data, rows) {
+                rowSelectionChanged: function (data, rows) {
                     updateBulkActions(data.length);
                 }
             });
 
             // Select all checkbox
-            $(document).on('click', '#selectAllMedia', function() {
+            $(document).on('click', '#selectAllMedia', function () {
                 if ($(this).is(':checked')) {
                     mediaTable.selectRow();
                 } else {
@@ -610,7 +609,7 @@
                 showLoading(true);
 
                 const [sortBy, sortDir = 'desc'] = currentSort.split('_').length > 2 ? [currentSort.split('_').slice(0,
-                        -1).join('_'), currentSort.split('_').pop()] :
+                    -1).join('_'), currentSort.split('_').pop()] :
                     currentSort.split('_');
 
                 const params = new URLSearchParams({
@@ -630,16 +629,15 @@
 
 
                 if (response.data.success) {
-                    const data = response.data.data;
-                    const meta = data.meta;
+                    const paginator = response.data.data;
 
                     // Update table data
-                    mediaTable.setData(data.data);
+                    mediaTable.setData(paginator.data);
 
                     // Update pagination info
-                    totalItems = meta.total;
-                    totalPages = meta.last_page;
-                    updatePaginationInfo(meta);
+                    totalItems = paginator.total;
+                    totalPages = paginator.last_page;
+                    updatePaginationInfo(paginator);
                     renderPageNumbers();
 
                     // Update bulk actions
@@ -654,12 +652,12 @@
         }
 
         // Update pagination info
-        function updatePaginationInfo(meta) {
+        function updatePaginationInfo(paginator) {
             const paginationInfo = document.getElementById('paginationInfo');
-            if (paginationInfo && meta) {
+            if (paginationInfo && paginator) {
                 paginationInfo.innerHTML = `
-                    Showing ${meta.from || 0} to ${meta.to || 0} of ${meta.total || 0} entries
-                `;
+                        Showing ${paginator.from || 0} to ${paginator.to || 0} of ${paginator.total || 0} entries
+                    `;
             }
 
             // Update pagination button states
@@ -843,7 +841,7 @@
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     },
-                    onUploadProgress: function(progressEvent) {
+                    onUploadProgress: function (progressEvent) {
                         const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
                         updateUploadProgress(percentCompleted, progressEvent.loaded, progressEvent.total);
                     }
@@ -911,22 +909,22 @@
                     Swal.fire({
                         title: 'Edit Media',
                         html: `
-                            <div class="text-left">
-                                <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">File Name</label>
-                                    <input type="text" id="editFileName" class="swal2-input" value="${media.file_name}" readonly>
+                                <div class="text-left">
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">File Name</label>
+                                        <input type="text" id="editFileName" class="swal2-input" value="${media.file_name}" readonly>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Alternative Text</label>
+                                        <input type="text" id="editAltText" class="swal2-input" value="${media.alt_text || ''}" placeholder="Describe this image...">
+                                    </div>
+                                    ${media.url ? `
+                                                                <div class="mb-4 text-center">
+                                                                    <img src="${media.url}" alt="${media.alt_text || media.file_name}" class="max-w-full max-h-48 mx-auto rounded-lg">
+                                                                </div>
+                                                            ` : ''}
                                 </div>
-                                <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Alternative Text</label>
-                                    <input type="text" id="editAltText" class="swal2-input" value="${media.alt_text || ''}" placeholder="Describe this image...">
-                                </div>
-                                ${media.url ? `
-                                                            <div class="mb-4 text-center">
-                                                                <img src="${media.url}" alt="${media.alt_text || media.file_name}" class="max-w-full max-h-48 mx-auto rounded-lg">
-                                                            </div>
-                                                        ` : ''}
-                            </div>
-                        `,
+                            `,
                         showCancelButton: true,
                         confirmButtonText: 'Update',
                         cancelButtonText: 'Cancel',
@@ -940,10 +938,10 @@
                         if (result.isConfirmed) {
                             try {
                                 const updateResponse = await axios.post(`{{ url('admin/media') }}/${id}/update`, result.value, {
-                                        headers: {
-                                            'Content-Type': 'multipart/form-data'
-                                        },
-                                    });
+                                    headers: {
+                                        'Content-Type': 'multipart/form-data'
+                                    },
+                                });
 
 
                                 if (updateResponse.data.success) {

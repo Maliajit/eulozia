@@ -31,7 +31,7 @@ class MediaController extends Controller
 
     public function __construct()
     {
-         if (class_exists(Driver::class)) {
+        if (class_exists(Driver::class)) {
             $this->imageManager = new ImageManager(new Driver());
         }
     }
@@ -51,23 +51,37 @@ class MediaController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where('file_name', 'LIKE', "%{$search}%")
-                  ->orWhere('alt_text', 'LIKE', "%{$search}%");
+                ->orWhere('alt_text', 'LIKE', "%{$search}%");
         }
-        
-        $query->latest();
 
-        $media = $query->paginate(12);
+        // Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortDir = $request->get('sort_dir', 'desc');
+        $query->orderBy($sortBy, $sortDir);
+
+        $media = $query->paginate($request->get('per_page', 12));
 
         $media->getCollection()->transform(function ($item) {
+            $url = asset(Storage::url($item->file_path));
+            $thumbUrl = asset(Storage::url($item->thumbnails['small'] ?? $item->file_path));
+
             return [
                 'id' => $item->id,
-                'url' => asset(Storage::url($item->file_path)),
+                'url' => $url,
+                'thumbnail_url' => $thumbUrl,
+                'thumb_url' => $thumbUrl, // Compatibility alias
                 'file_path' => $item->file_path,
+                'path' => $url, // Compatibility alias
                 'file_name' => $item->file_name,
+                'filename' => $item->file_name, // Compatibility alias
+                'alt_text' => $item->alt_text,
                 'mime_type' => $item->mime_type,
                 'is_image' => str_starts_with($item->mime_type, 'image/'),
+                'size_formatted' => $this->formatBytes($item->file_size),
+                'created_at_formatted' => $item->created_at->format('M d, Y H:i'),
             ];
         });
+
 
         return response()->json([
             'success' => true,
@@ -75,10 +89,85 @@ class MediaController extends Controller
         ]);
     }
 
+
+    public function update(Request $request, $id)
+    {
+        $media = Media::findOrFail($id);
+        $media->update([
+            'alt_text' => $request->alt_text
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Media updated successfully'
+        ]);
+    }
+
+    public function destroy($id)
+    {
+        $media = Media::findOrFail($id);
+
+        // Delete physical files
+        if (Storage::disk('public')->exists($media->file_path)) {
+            Storage::disk('public')->delete($media->file_path);
+        }
+
+        if ($media->thumbnails) {
+            foreach ($media->thumbnails as $thumbPath) {
+                if (Storage::disk('public')->exists($thumbPath)) {
+                    Storage::disk('public')->delete($thumbPath);
+                }
+            }
+        }
+
+        $media->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Media deleted successfully'
+        ]);
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        $ids = $request->ids;
+        if (empty($ids)) {
+            return response()->json(['success' => false, 'message' => 'No files selected'], 400);
+        }
+
+        $mediaItems = Media::whereIn('id', $ids)->get();
+        $deletedCount = 0;
+
+        foreach ($mediaItems as $media) {
+            // Delete physical files
+            if (Storage::disk('public')->exists($media->file_path)) {
+                Storage::disk('public')->delete($media->file_path);
+            }
+
+            if ($media->thumbnails) {
+                foreach ($media->thumbnails as $thumbPath) {
+                    if (Storage::disk('public')->exists($thumbPath)) {
+                        Storage::disk('public')->delete($thumbPath);
+                    }
+                }
+            }
+
+            $media->delete();
+            $deletedCount++;
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'deleted_count' => $deletedCount
+            ]
+        ]);
+    }
+
     public function upload(Request $request)
     {
         $request->validate([
-             'files.*' => 'required|file|max:10240', // 10MB max per file
+            'files.*' => 'required|file|max:10240', // 10MB max per file
         ]);
 
         if (!$request->hasFile('files')) {
@@ -94,12 +183,12 @@ class MediaController extends Controller
                 $extension = $file->getClientOriginalExtension();
                 $fileName = pathinfo($originalName, PATHINFO_FILENAME);
                 $uniqueName = Str::slug($fileName) . '_' . time() . '_' . Str::random(5) . '.' . $extension;
-                
+
                 $storagePath = 'products/media/' . date('Y/m');
                 $fullPath = $storagePath . '/' . $uniqueName;
-                
+
                 Storage::disk('public')->putFileAs($storagePath, $file, $uniqueName);
-                
+
                 // Create thumbnails if image
                 $thumbnails = [];
                 if (str_starts_with($file->getMimeType(), 'image/') && isset($this->imageManager)) {
@@ -114,11 +203,12 @@ class MediaController extends Controller
                     'file_type' => str_starts_with($file->getMimeType(), 'image/') ? 'image' : 'document',
                     'file_size' => $file->getSize(),
                     'thumbnails' => $thumbnails ?: null,
+                    'alt_text' => $request->alt_text,
                     'metadata' => [
                         'original_name' => $originalName,
                         'extension' => $extension,
                     ],
-                    'uploaded_by' => \Illuminate\Support\Facades\Auth::guard('admin')->id() ?? auth()->id(), 
+                    'uploaded_by' => \Illuminate\Support\Facades\Auth::guard('admin')->id() ?? auth()->id(),
                     'uploader_type' => 'admin',
                 ]);
 
@@ -135,8 +225,10 @@ class MediaController extends Controller
 
         return response()->json([
             'success' => count($errors) === 0,
-            'data' => count($uploadedMedia) > 0 ? $uploadedMedia[0] : null, // Backwards compatibility for single select UI
-            'all_uploaded' => $uploadedMedia,
+            'data' => [
+                'total_uploaded' => count($uploadedMedia),
+                'files' => $uploadedMedia
+            ],
             'errors' => $errors
         ]);
     }
@@ -145,21 +237,32 @@ class MediaController extends Controller
     {
         $thumbnails = [];
         try {
-             $image = $this->imageManager->read($file->getRealPath());
-             $originalName = pathinfo($fileName, PATHINFO_FILENAME);
-             $extension = pathinfo($fileName, PATHINFO_EXTENSION);
+            $image = $this->imageManager->read($file->getRealPath());
+            $originalName = pathinfo($fileName, PATHINFO_FILENAME);
+            $extension = pathinfo($fileName, PATHINFO_EXTENSION);
 
-             // Small
-             $smallName = $originalName . '_small.' . $extension;
-             $smallImage = clone $image;
-             $smallImage->cover(150, 150);
-             Storage::disk('public')->put($storagePath . '/' . $smallName, (string) $smallImage->encodeByExtension($extension));
-             $thumbnails['small'] = $storagePath . '/' . $smallName;
+            // Small
+            $smallName = $originalName . '_small.' . $extension;
+            $smallImage = clone $image;
+            $smallImage->cover(150, 150);
+            Storage::disk('public')->put($storagePath . '/' . $smallName, (string) $smallImage->encodeByExtension($extension));
+            $thumbnails['small'] = $storagePath . '/' . $smallName;
 
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             // Squelch image error to ensure primary upload succeeds
         }
-        
+
         return $thumbnails;
+    }
+
+    private function formatBytes($bytes, $decimals = 2)
+    {
+        if ($bytes == 0)
+            return '0 Bytes';
+        $k = 1024;
+        $dm = $decimals < 0 ? 0 : $decimals;
+        $sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+        $i = floor(log($bytes) / log($k));
+        return (float) number_format($bytes / pow($k, $i), $dm) . ' ' . $sizes[$i];
     }
 }

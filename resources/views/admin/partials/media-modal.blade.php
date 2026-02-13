@@ -1,18 +1,18 @@
 @php
-/**
- * Admin Media Modal
- * 
- * Purpose: Universal media picker and uploader component.
- * 
- * Data Flow: 
- * - Request: Axios calls to MediaController@getData and @upload.
- * - Callback: Uses `onSelectCallback` to return selected image data to the calling page.
- * 
- * Database: 
- * - `media`: Fetches and stores image records.
- * 
- * Dependencies: Axios, FontAwesome, Admin API, Tailwind CSS.
- */
+    /**
+     * Admin Media Modal
+     * 
+     * Purpose: Universal media picker and uploader component.
+     * 
+     * Data Flow: 
+     * - Request: Axios calls to MediaController@getData and @upload.
+     * - Callback: Uses `onSelectCallback` to return selected image data to the calling page.
+     * 
+     * Database: 
+     * - `media`: Fetches and stores image records.
+     * 
+     * Dependencies: Axios, FontAwesome, Admin API, Tailwind CSS.
+     */
 @endphp
 <!-- Media Modal -->
 <div id="media-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
@@ -21,11 +21,15 @@
 
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
 
-        <div class="inline-block w-full max-w-5xl overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle">
+        <div
+            class="inline-block w-full max-w-5xl overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle">
             <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
                 <h3 class="text-xl font-bold text-gray-800" id="modal-title">Select Media</h3>
                 <button type="button" onclick="closeMediaModal()" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
                 </button>
             </div>
 
@@ -33,21 +37,23 @@
                 <!-- Search and Upload -->
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                     <div class="relative flex-1 max-w-md">
-                        <input type="text" id="media-search" placeholder="Search media..." 
-                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                        <input type="text" id="media-search" placeholder="Search media..."
+                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
                         <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                     </div>
                     <div>
-                        <input type="file" id="media-upload-input" multiple class="hidden" onchange="handleFileUpload(event)">
-                        <button type="button" onclick="document.getElementById('media-upload-input').click()" 
-                                class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition flex items-center">
+                        <input type="file" id="media-upload-input" multiple class="hidden"
+                            onchange="handleFileUpload(event)">
+                        <button type="button" onclick="document.getElementById('media-upload-input').click()"
+                            class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition flex items-center">
                             <i class="fas fa-upload mr-2"></i>Upload New
                         </button>
                     </div>
                 </div>
 
                 <!-- Media Grid -->
-                <div id="media-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 max-h-[50vh] overflow-y-auto p-1">
+                <div id="media-grid"
+                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 max-h-[50vh] overflow-y-auto p-1">
                     <div class="col-span-full text-center py-20 text-gray-500">
                         <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
                         <p>Loading media...</p>
@@ -59,8 +65,10 @@
             </div>
 
             <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end space-x-3">
-                <button type="button" onclick="closeMediaModal()" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition">Cancel</button>
-                <button type="button" onclick="confirmMediaSelection()" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-bold">Select</button>
+                <button type="button" onclick="closeMediaModal()"
+                    class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition">Cancel</button>
+                <button type="button" onclick="confirmMediaSelection()"
+                    class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-bold">Select</button>
             </div>
         </div>
     </div>
@@ -73,11 +81,11 @@
     let onSelectCallback = null;
 
     window.mediaModal = {
-        open: function(options = {}) {
+        open: function (options = {}) {
             currentMode = options.mode || 'main';
             onSelectCallback = options.onSelect || null;
             selectedImages = [];
-            
+
             document.getElementById('media-modal').classList.remove('hidden');
             document.body.classList.add('overflow-hidden');
             loadMedia(1);
@@ -139,7 +147,7 @@
         }
 
         let html = '';
-        
+
         // Previous
         if (data.prev_page_url) {
             html += `<button onclick="loadMedia(${data.current_page - 1})" class="px-3 py-1 bg-white border border-gray-300 rounded-md hover:bg-gray-50 text-sm">Previous</button>`;
@@ -171,8 +179,9 @@
             if (index === -1) selectedImages.push({ id, url, file_path: filePath });
             else selectedImages.splice(index, 1);
         }
-        renderMediaGrid(currentMediaData.data);
+        renderMediaGrid(currentMediaData.data.data);
     }
+
 
     function confirmMediaSelection() {
         if (selectedImages.length === 0) {

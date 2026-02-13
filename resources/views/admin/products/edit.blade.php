@@ -1005,33 +1005,33 @@
             const response = await axios.get('{{ route("admin.media.data") }}', {
                 params: { page, search }
             });
-            renderMediaGrid(response.data);
+            renderMediaGrid(response.data.data);
         } catch (error) {
             console.error(error);
             grid.innerHTML = '<div class="col-span-full text-red-500">Error loading media</div>';
         }
     }
 
-    function renderMediaGrid(data) {
+    function renderMediaGrid(paginator) {
         const grid = document.getElementById('media-grid');
         grid.innerHTML = '';
         
-        data.data.forEach(media => {
+        paginator.data.forEach(media => {
              const div = document.createElement('div');
              div.className = `relative group cursor-pointer border rounded-lg overflow-hidden ${selectedMediaId === media.id ? 'ring-2 ring-blue-500' : ''}`;
              div.onclick = () => selectMedia(media.id, media.url);
              div.innerHTML = `
                 <img src="${media.thumb_url || media.url}" class="w-full h-32 object-cover">
-                <div class="p-2 text-xs truncate">${media.filename}</div>
+                <div class="p-2 text-xs truncate">${media.filename || media.file_name}</div>
              `;
              grid.appendChild(div);
         });
 
          const pag = document.getElementById('media-pagination');
-         let pagHtml = `<span class="text-sm">Page ${data.current_page} of ${data.last_page}</span>`;
+         let pagHtml = `<span class="text-sm">Page ${paginator.current_page} of ${paginator.last_page}</span>`;
          pagHtml += `<div class="space-x-1">`;
-         if(data.prev_page_url) pagHtml += `<button type="button" onclick="loadMedia(${data.current_page - 1})" class="px-2 py-1 border rounded hover:bg-gray-50">Prev</button>`;
-         if(data.next_page_url) pagHtml += `<button type="button" onclick="loadMedia(${data.current_page + 1})" class="px-2 py-1 border rounded hover:bg-gray-50">Next</button>`;
+         if(paginator.prev_page_url) pagHtml += `<button type="button" onclick="loadMedia(${paginator.current_page - 1})" class="px-2 py-1 border rounded hover:bg-gray-50">Prev</button>`;
+         if(paginator.next_page_url) pagHtml += `<button type="button" onclick="loadMedia(${paginator.current_page + 1})" class="px-2 py-1 border rounded hover:bg-gray-50">Next</button>`;
          pagHtml += `</div>`;
          pag.innerHTML = pagHtml;
     }

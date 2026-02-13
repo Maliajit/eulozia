@@ -56,18 +56,18 @@ Route::prefix('admin')->group(function () {
             Route::get('/statistics', [AdminCategory::class, 'statistics'])->name('admin.categories.statistics'); // Stats
             Route::post('/bulk-delete', [AdminCategory::class, 'bulkDelete'])->name('admin.categories.bulk-delete');
             Route::post('/bulk-status', [AdminCategory::class, 'bulkStatus'])->name('admin.categories.bulk-status');
-            
+
             Route::post('/', [AdminCategory::class, 'store'])->name('admin.categories.store');
             Route::get('/create', [AdminCategory::class, 'create'])->name('admin.categories.create');
-            
+
             Route::get('/{id}/edit', [AdminCategory::class, 'edit'])->name('admin.categories.edit');
             Route::put('/{id}', [AdminCategory::class, 'update'])->name('admin.categories.update');
             Route::delete('/{id}', [AdminCategory::class, 'destroy'])->name('admin.categories.destroy');
             Route::post('/{id}/toggle-status', [AdminCategory::class, 'toggleStatus'])->name('admin.categories.toggle-status');
-            
+
             Route::get('/{id}', [AdminCategory::class, 'show'])->name('admin.categories.show');
         });
-        
+
         Route::get('/attributes/dropdown', [AdminCategory::class, 'getAttributesDropdown'])->name('admin.categories.attributes-dropdown');
         Route::get('/specification-groups/dropdown', [AdminCategory::class, 'getSpecGroupsDropdown'])->name('admin.categories.spec-groups-dropdown');
 
@@ -131,7 +131,11 @@ Route::prefix('admin')->group(function () {
             Route::get('/', [AdminMedia::class, 'index'])->name('admin.media.index');
             Route::get('/data', [AdminMedia::class, 'getData'])->name('admin.media.data');
             Route::post('/upload', [AdminMedia::class, 'upload'])->name('admin.media.upload');
+            Route::post('/bulk-delete', [AdminMedia::class, 'bulkDelete'])->name('admin.media.bulk-delete');
+            Route::post('/{id}/update', [AdminMedia::class, 'update'])->name('admin.media.update');
+            Route::delete('/{id}/delete', [AdminMedia::class, 'destroy'])->name('admin.media.delete');
         });
+
 
         /*
         |--------------------------------------------------------------------------

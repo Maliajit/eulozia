@@ -76,24 +76,11 @@ class SnippetDemoSeeder extends Seeder
         }
 
         // 3. Create Products from snippet
-        $productImages = [
+        $defaultProductImages = [
             'https://godevil.in/cdn/shop/products/paisely-design-printed-green-shirt-for-men-860980.jpg?v=1695318274',
             'https://www.ottostore.com/cdn/shop/files/ADS09041_1800x1800.jpg?v=1748666820',
             'https://blackberrys.com/cdn/shop/files/Formal_Grey_Printed_Shirt_Wiper-MS013772G1-image1_1600x.jpg?v=1735213165',
         ];
-
-        $mediaIds = [];
-        foreach ($productImages as $index => $url) {
-            $media = Media::create([
-                'file_name' => 'product-image-' . ($index + 1) . '.jpg',
-                'file_path' => $url,
-                'disk' => 'url',
-                'mime_type' => 'image/jpeg',
-                'file_type' => 'image',
-                'alt_text' => 'Product View ' . ($index + 1),
-            ]);
-            $mediaIds[] = $media->id;
-        }
 
         $productsData = [
             [
@@ -103,6 +90,7 @@ class SnippetDemoSeeder extends Seeder
                 'compare_price' => 22799,
                 'is_featured' => true,
                 'special_cats' => ['featured-collection', 'new-arrivals-home'],
+                'images' => $defaultProductImages,
             ],
             [
                 'name' => 'CHECKERED FORMAL SHIRT',
@@ -111,6 +99,88 @@ class SnippetDemoSeeder extends Seeder
                 'compare_price' => 22799,
                 'is_new' => true,
                 'special_cats' => ['best-sellers-home', 'new-arrivals-home'],
+                'images' => $defaultProductImages,
+            ],
+            [
+                'name' => 'Casual Shirt 1',
+                'slug' => 'casual-shirt-1',
+                'price' => 1299,
+                'compare_price' => 1599,
+                'is_new' => true,
+                'special_cats' => ['new-arrivals-home'],
+                'images' => ['https://i.pinimg.com/originals/2f/3c/48/2f3c48c766f2c27752f8d6b214877952.jpg'],
+            ],
+            [
+                'name' => 'Casual Shirt 2',
+                'slug' => 'casual-shirt-2',
+                'price' => 1299,
+                'compare_price' => 1599,
+                'is_new' => true,
+                'special_cats' => ['new-arrivals-home'],
+                'images' => ['https://i.pinimg.com/originals/2f/3c/48/2f3c48c766f2c27752f8d6b214877952.jpg'],
+            ],
+            [
+                'name' => 'Casual Shirt 3',
+                'slug' => 'casual-shirt-3',
+                'price' => 1299,
+                'compare_price' => 1599,
+                'is_new' => true,
+                'special_cats' => ['new-arrivals-home'],
+                'images' => ['https://i.pinimg.com/originals/2f/3c/48/2f3c48c766f2c27752f8d6b214877952.jpg'],
+            ],
+            [
+                'name' => 'Casual Shirt 4',
+                'slug' => 'casual-shirt-4',
+                'price' => 1299,
+                'compare_price' => 1599,
+                'is_new' => true,
+                'special_cats' => ['new-arrivals-home'],
+                'images' => ['https://i.pinimg.com/originals/2f/3c/48/2f3c48c766f2c27752f8d6b214877952.jpg'],
+            ],
+            [
+                'name' => 'Premium Tee 1',
+                'slug' => 'premium-tee-1',
+                'price' => 999,
+                'compare_price' => 1299,
+                'is_bestseller' => true,
+                'special_cats' => ['best-sellers-home'],
+                'images' => ['https://i.pinimg.com/originals/2f/3c/48/2f3c48c766f2c27752f8d6b214877952.jpg'],
+            ],
+            [
+                'name' => 'Premium Tee 2',
+                'slug' => 'premium-tee-2',
+                'price' => 999,
+                'compare_price' => 1299,
+                'is_bestseller' => true,
+                'special_cats' => ['best-sellers-home'],
+                'images' => ['https://i.pinimg.com/originals/2f/3c/48/2f3c48c766f2c27752f8d6b214877952.jpg'],
+            ],
+            [
+                'name' => 'Premium Tee 3',
+                'slug' => 'premium-tee-3',
+                'price' => 999,
+                'compare_price' => 1299,
+                'is_bestseller' => true,
+                'special_cats' => ['best-sellers-home'],
+                'images' => ['https://i.pinimg.com/originals/2f/3c/48/2f3c48c766f2c27752f8d6b214877952.jpg'],
+            ],
+            [
+                'name' => 'Premium Tee 4',
+                'slug' => 'premium-tee-4',
+                'price' => 999,
+                'compare_price' => 1299,
+                'is_bestseller' => true,
+                'special_cats' => ['best-sellers-home'],
+                'images' => ['https://i.pinimg.com/originals/2f/3c/48/2f3c48c766f2c27752f8d6b214877952.jpg'],
+            ],
+            [
+                'name' => 'Celestial Veil Oversized T-Shirt',
+                'slug' => 'celestial-veil-oversized-t-shirt',
+                'price' => 2009,
+                'compare_price' => 2499,
+                'is_featured' => true,
+                'special_cats' => ['featured-collection'],
+                'images' => ['https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=880&q=80'],
             ],
         ];
 
@@ -124,23 +194,29 @@ class SnippetDemoSeeder extends Seeder
                     'is_featured' => $data['is_featured'] ?? false,
                     'is_new' => $data['is_new'] ?? false,
                     'is_bestseller' => $data['is_bestseller'] ?? false,
-                    'short_description' => 'Premium quality shirt with modern design.',
-                    'description' => 'Experience luxury with our high-fashion double pocket club shirt. Crafted with premium fabrics for comfort and style.',
-                    'main_category_id' => $mainCategoryIds[0], // Arbitrary main category
+                    'short_description' => 'Premium quality apparel with modern design.',
+                    'description' => 'Experience style and comfort with our latest collection. Crafted with premium fabrics for a perfect fit.',
+                    'main_category_id' => $mainCategoryIds[1], // T-Shirts as default main category
                 ]
             );
 
             // Link to special categories
-            foreach ($data['special_cats'] as $catSlug) {
-                $product->categories()->syncWithoutDetaching([$specialCategoryIds[$catSlug]]);
+            if (isset($data['special_cats'])) {
+                $syncIds = [];
+                foreach ($data['special_cats'] as $catSlug) {
+                    if (isset($specialCategoryIds[$catSlug])) {
+                        $syncIds[] = $specialCategoryIds[$catSlug];
+                    }
+                }
+                $product->categories()->syncWithoutDetaching($syncIds);
             }
 
             $variant = ProductVariant::updateOrCreate(
                 ['product_id' => $product->id, 'is_default' => true],
                 [
-                    'sku' => strtoupper(Str::random(8)),
+                    'sku' => strtoupper(substr($data['slug'], 0, 3)) . '-' . strtoupper(Str::random(5)),
                     'price' => $data['price'],
-                    'compare_price' => $data['compare_price'],
+                    'compare_price' => $data['compare_price'] ?? null,
                     'stock_quantity' => 100,
                     'stock_status' => 'in_stock',
                     'status' => true,
@@ -148,15 +224,28 @@ class SnippetDemoSeeder extends Seeder
             );
 
             // Attach images to variant
-            foreach ($mediaIds as $index => $mediaId) {
+            $images = $data['images'] ?? $defaultProductImages;
+            foreach ($images as $index => $url) {
+                $media = Media::firstOrCreate(
+                    ['file_path' => $url],
+                    [
+                        'file_name' => basename(parse_url($url, PHP_URL_PATH)),
+                        'disk' => 'url',
+                        'mime_type' => 'image/jpeg',
+                        'file_type' => 'image',
+                        'alt_text' => $data['name'] . ' View ' . ($index + 1),
+                    ]
+                );
+
                 $variant->images()->syncWithoutDetaching([
-                    $mediaId => [
+                    $media->id => [
                         'is_primary' => $index === 0,
                         'sort_order' => $index,
                     ]
                 ]);
             }
         }
+
 
         // 4. Create Banners
         Banner::create([

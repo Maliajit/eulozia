@@ -31,12 +31,19 @@
                 <span class="text-secondary font-bold text-lg">Total Payable</span>
                 <span class="text-secondary font-bold text-lg">₹0</span>
             </div>
-            <a href="{{ route('customer.checkout.index') }}">
-                <button
+            @auth('customer')
+                <a href="{{ route('customer.checkout.index') }}">
+                    <button
+                        class="w-full bg-accent text-primary py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 transition mb-3">
+                        PROCEED TO BUY
+                    </button>
+                </a>
+            @else
+                <button onclick="handleUnauthenticatedCheckout()"
                     class="w-full bg-accent text-primary py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 transition mb-3">
                     PROCEED TO BUY
                 </button>
-            </a>
+            @endauth
         </div>
     </div>
 </div>
@@ -164,6 +171,23 @@
             modal.classList.add('hidden');
             document.body.style.overflow = 'auto';
         }, 300);
+    }
+
+    function handleUnauthenticatedCheckout() {
+        if (typeof showToast === 'function') {
+            showToast('Please login to proceed with your purchase', 'info', 3000);
+        } else {
+            alert('Please login to proceed with your purchase');
+        }
+
+        // Open login modal after a short delay
+        setTimeout(() => {
+            if (typeof openLoginModal === 'function') {
+                openLoginModal();
+            } else {
+                window.location.href = "{{ route('customer.login') }}";
+            }
+        }, 1000);
     }
 
     document.addEventListener('DOMContentLoaded', () => {

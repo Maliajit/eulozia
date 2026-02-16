@@ -460,48 +460,6 @@
 
 @push('scripts')
     <script>
-        // Toast Notification System
-        function showToast(message, type = 'success', duration = 3000) {
-            const container = document.getElementById('toastContainer');
-
-            // Create toast element
-            const toast = document.createElement('div');
-            toast.className = `toast-notification pointer-events-auto transform transition-all duration-300 ease-out opacity-0 translate-y-4 ${type === 'success' ? 'bg-green-600' : 'bg-red-600'
-                } text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 min-w-[300px] max-w-md`;
-
-            // Icon based on type
-            const icon = type === 'success'
-                ? `<svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                   </svg>`
-                : `<svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                   </svg>`;
-
-            toast.innerHTML = `
-                                ${icon}
-                                <span class="flex-1 font-medium">${message}</span>
-                                <button onclick="this.parentElement.remove()" class="hover:bg-white hover:bg-opacity-20 rounded p-1 transition-colors">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                </button>
-                            `;
-
-            container.appendChild(toast);
-
-            // Trigger animation
-            setTimeout(() => {
-                toast.classList.remove('opacity-0', 'translate-y-4');
-            }, 10);
-
-            // Auto remove after duration
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-4');
-                setTimeout(() => toast.remove(), 300);
-            }, duration);
-        }
-
         // Change main image when thumbnail is clicked (desktop only)
         function changeMainImage(src) {
             const mainImage = document.getElementById('mainImage');

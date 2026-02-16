@@ -110,17 +110,17 @@
 
                 <!-- Product Details - 40% on large, 50% on tablet, full width on mobile -->
                 <div class="w-full md:w-1/2 lg:w-2/5 ">
-                    <div class="bg-primary rounded-lg p-6 sticky top-4 text-center">
+                    <div class="bg-primary rounded-lg p-6 sticky top-4">
                         <!-- Product Name -->
-                        <h1 class="text-2xl font-bold text-secondary mb-2 text-center">{{ $product['name'] }}</h1>
+                        <h1 class="text-2xl font-bold text-secondary mb-2">{{ $product['name'] }}</h1>
 
                         @if(isset($product['brand']) && $product['brand'])
                             <!-- Brand -->
-                            <p class="text-accent text-lg mb-4 text-center">{{ $product['brand']['name'] }}</p>
+                            <p class="text-accent text-lg mb-4">{{ $product['brand']['name'] }}</p>
                         @endif
 
                         <!-- Price -->
-                        <div class="flex items-center justify-center space-x-3 mb-4 ">
+                        <div class="flex items-center space-x-3 mb-4 ">
                             <span class="text-secondary text-xl font-bold">₹{{ number_format($product['price'], 2) }}</span>
                             @if($product['compare_price'] && $product['compare_price'] > $product['price'])
                                 <span
@@ -132,22 +132,48 @@
                         </div>
 
                         <!-- Tax Info -->
-                        <p class="text-accent text-sm mb-6 text-center">(Incl. of all taxes)</p>
+                        <p class="text-accent text-sm mb-6">(Incl. of all taxes)</p>
 
                         <!-- Size/Variant Selection -->
                         @if(isset($product['attribute_groups']) && count($product['attribute_groups']) > 0)
-                            <div class="mb-6 text-center">
+                            <div class="mb-6">
                                 @foreach($product['attribute_groups'] as $attributeName => $attributeGroup)
-                                    <h3 class="text-secondary font-semibold mb-3 text-center">{{ $attributeName }}</h3>
-                                    <div class="flex flex-wrap gap-2 justify-center mb-4">
+                                    <h3 class="text-secondary font-semibold mb-3">{{ $attributeName }}</h3>
+                                    <div class="flex flex-wrap gap-2 mb-4">
                                         @foreach ($attributeGroup['options'] as $option)
-                                            <label class="inline-flex items-center">
+                                            <label class="inline-flex items-center cursor-pointer group" title="{{ $option['label'] }}">
                                                 <input type="radio" name="attribute_{{ $attributeName }}" value="{{ $option['value'] }}"
                                                     class="hidden peer">
-                                                <span
-                                                    class="px-4 py-2 border border-accent text-accent rounded-md cursor-pointer transition-all duration-300 peer-checked:bg-accent peer-checked:text-primary peer-checked:border-accent">
-                                                    {{ $option['label'] }}
-                                                </span>
+                                                @if(isset($attributeGroup['type']) && $attributeGroup['type'] === 'color')
+                                                    @php
+                                                        $colorCode = $option['color_code'] ?? '';
+                                                        if (empty($colorCode) && isset($option['label']) && (Str::startsWith($option['label'], '#') || preg_match('/^[a-fA-F0-9]{3,6}$/', $option['label']))) {
+                                                            $colorCode = $option['label'];
+                                                        }
+                                                        if (empty($colorCode))
+                                                            $colorCode = '#ccc';
+                                                        if (!Str::startsWith($colorCode, '#') && !Str::startsWith($colorCode, 'rgb') && !Str::startsWith($colorCode, 'hsl')) {
+                                                            $colorCode = '#' . $colorCode;
+                                                        }
+                                                        $hexVal = strtoupper(str_replace('#', '', $colorCode));
+                                                        $isWhite = in_array($hexVal, ['FFFFFF', 'FFF', 'F9F9F9', 'F3F4F6', 'EEEEEE', 'E5E7EB']);
+                                                        $isBlack = in_array($hexVal, ['000000', '000', '111111', '1F2937']);
+                                                    @endphp
+                                                    <span
+                                                        class="w-10 h-10 rounded-full border-2 {{ $isWhite ? 'border-gray-300' : ($isBlack ? 'border-gray-700' : 'border-transparent') }} peer-checked:border-accent group-hover:scale-110 transition-all shadow-sm flex items-center justify-center relative"
+                                                        style="background-color: {{ $colorCode }};">
+                                                        <svg class="w-5 h-5 {{ $isWhite ? 'text-gray-900' : 'text-white' }} opacity-0 peer-checked:opacity-100 transition-opacity"
+                                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                                d="M5 13l4 4L19 7"></path>
+                                                        </svg>
+                                                    </span>
+                                                @else
+                                                    <span
+                                                        class="px-4 py-2 border border-accent text-accent rounded-md transition-all duration-300 peer-checked:bg-accent peer-checked:text-primary peer-checked:border-accent">
+                                                        {{ $option['label'] }}
+                                                    </span>
+                                                @endif
                                             </label>
                                         @endforeach
                                     </div>
@@ -156,9 +182,9 @@
                         @endif
 
                         <!-- Quantity -->
-                        <div class="mb-6 text-center justify-center">
-                            <h3 class="text-secondary font-semibold mb-3 text-center">Quantity</h3>
-                            <div class="flex items-center space-x-3 justify-center">
+                        <div class="mb-6">
+                            <h3 class="text-secondary font-semibold mb-3">Quantity</h3>
+                            <div class="flex items-center space-x-3">
                                 <button
                                     class="w-10 h-10 rounded-full border border-accent text-accent flex items-center justify-center hover:bg-accent hover:text-primary transition-colors duration-300 quantity-btn"
                                     data-action="decrease">-</button>
@@ -184,7 +210,7 @@
                         </div>
 
                         <!-- Delivery Check -->
-                        <div class="mb-6 text-center">
+                        <div class="mb-6">
                             <h3 class="text-secondary font-semibold mb-3">CHECK ESTIMATED DELIVERY</h3>
                             <div class="flex space-x-2">
                                 <input type="text" placeholder="380016"
@@ -209,11 +235,11 @@
                         </div>
 
                         <!-- Accordion Sections -->
-                        <div class="space-y-2">
+                        <div class="space-y-2 text-left">
                             <!-- Description -->
                             <div class="border-b border-gray-700">
                                 <button
-                                    class="accordion-btn w-full flex justify-between items-center py-3 text-secondary font-semibold text-left">
+                                    class="accordion-btn w-full flex justify-between items-center py-3 text-secondary font-semibold">
                                     <span>DESCRIPTION</span>
                                     <svg class="w-5 h-5 transform transition-transform duration-300" fill="none"
                                         stroke="currentColor" viewBox="0 0 24 24">
@@ -221,7 +247,7 @@
                                             d="M19 9l-7 7-7-7"></path>
                                     </svg>
                                 </button>
-                                <div class="accordion-content hidden pb-4 text-accent">
+                                <div class="accordion-content hidden pb-4 text-accent text-left">
                                     @if($product['description'])
                                         <p class="mb-3">{!! nl2br(e($product['description'])) !!}</p>
                                     @endif
@@ -238,7 +264,7 @@
                             <!-- Manufacturer Details -->
                             <div class="border-b border-gray-700">
                                 <button
-                                    class="accordion-btn w-full flex justify-between items-center py-3 text-secondary font-semibold text-left">
+                                    class="accordion-btn w-full flex justify-between items-center py-3 text-secondary font-semibold">
                                     <span>MANUFACTURER DETAILS</span>
                                     <svg class="w-5 h-5 transform transition-transform duration-300" fill="none"
                                         stroke="currentColor" viewBox="0 0 24 24">
@@ -246,7 +272,7 @@
                                             d="M19 9l-7 7-7-7"></path>
                                     </svg>
                                 </button>
-                                <div class="accordion-content hidden pb-4 text-accent">
+                                <div class="accordion-content hidden pb-4 text-accent text-left">
                                     <p>Manufacturer: Fashion Store Pvt. Ltd.</p>
                                     <p>Country of Origin: India</p>
                                     <p>Care Instructions: Machine wash cold, tumble dry low</p>
@@ -256,7 +282,7 @@
                             <!-- Shipping, Return and Exchange -->
                             <div class="border-b border-gray-700">
                                 <button
-                                    class="accordion-btn w-full flex justify-between items-center py-3 text-secondary font-semibold text-left">
+                                    class="accordion-btn w-full flex justify-between items-center py-3 text-secondary font-semibold">
                                     <span>SHIPPING, RETURN AND EXCHANGE</span>
                                     <svg class="w-5 h-5 transform transition-transform duration-300" fill="none"
                                         stroke="currentColor" viewBox="0 0 24 24">
@@ -264,7 +290,7 @@
                                             d="M19 9l-7 7-7-7"></path>
                                     </svg>
                                 </button>
-                                <div class="accordion-content hidden pb-4 text-accent">
+                                <div class="accordion-content hidden pb-4 text-accent text-left">
                                     <ul class="list-disc list-inside space-y-1">
                                         <li>Free shipping on all orders above ₹999.</li>
                                         <li>Standard delivery within 5–7 business days.</li>
@@ -293,13 +319,39 @@
                     @if(isset($product['attribute_groups']) && count($product['attribute_groups']) > 0)
                         @foreach($product['attribute_groups'] as $attributeName => $attributeGroup)
                             @foreach ($attributeGroup['options'] as $option)
-                                <label class="inline-flex items-center">
+                                <label class="inline-flex items-center cursor-pointer group" title="{{ $option['label'] }}">
                                     <input type="radio" name="modal-attribute-{{ $attributeName }}" value="{{ $option['value'] }}"
                                         class="hidden peer">
-                                    <span
-                                        class="w-full px-4 py-3 border border-accent text-accent rounded-md cursor-pointer transition-all duration-300 peer-checked:bg-accent peer-checked:text-primary peer-checked:border-accent text-center">
-                                        {{ $option['label'] }}
-                                    </span>
+                                    @if(isset($attributeGroup['type']) && $attributeGroup['type'] === 'color')
+                                        @php
+                                            $colorCode = $option['color_code'] ?? '';
+                                            if (empty($colorCode) && isset($option['label']) && (Str::startsWith($option['label'], '#') || preg_match('/^[a-fA-F0-9]{3,6}$/', $option['label']))) {
+                                                $colorCode = $option['label'];
+                                            }
+                                            if (empty($colorCode))
+                                                $colorCode = '#ccc';
+                                            if (!Str::startsWith($colorCode, '#') && !Str::startsWith($colorCode, 'rgb') && !Str::startsWith($colorCode, 'hsl')) {
+                                                $colorCode = '#' . $colorCode;
+                                            }
+                                            $hexVal = strtoupper(str_replace('#', '', $colorCode));
+                                            $isWhite = in_array($hexVal, ['FFFFFF', 'FFF', 'F9F9F9', 'F3F4F6', 'EEEEEE', 'E5E7EB']);
+                                            $isBlack = in_array($hexVal, ['000000', '000', '111111', '1F2937']);
+                                        @endphp
+                                        <span
+                                            class="w-12 h-12 rounded-full border-2 {{ $isWhite ? 'border-gray-300' : ($isBlack ? 'border-gray-700' : 'border-transparent') }} peer-checked:border-accent group-hover:scale-110 transition-all shadow-sm flex items-center justify-center relative"
+                                            style="background-color: {{ $colorCode }};">
+                                            <svg class="w-6 h-6 {{ $isWhite ? 'text-gray-900' : 'text-white' }} opacity-0 peer-checked:opacity-100 transition-opacity"
+                                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7">
+                                                </path>
+                                            </svg>
+                                        </span>
+                                    @else
+                                        <span
+                                            class="w-full px-4 py-3 border border-accent text-accent rounded-md transition-all duration-300 peer-checked:bg-accent peer-checked:text-primary peer-checked:border-accent text-center">
+                                            {{ $option['label'] }}
+                                        </span>
+                                    @endif
                                 </label>
                             @endforeach
                         @endforeach
@@ -420,21 +472,21 @@
             // Icon based on type
             const icon = type === 'success'
                 ? `<svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                   </svg>`
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                   </svg>`
                 : `<svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                   </svg>`;
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                   </svg>`;
 
             toast.innerHTML = `
-                ${icon}
-                <span class="flex-1 font-medium">${message}</span>
-                <button onclick="this.parentElement.remove()" class="hover:bg-white hover:bg-opacity-20 rounded p-1 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            `;
+                                ${icon}
+                                <span class="flex-1 font-medium">${message}</span>
+                                <button onclick="this.parentElement.remove()" class="hover:bg-white hover:bg-opacity-20 rounded p-1 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            `;
 
             container.appendChild(toast);
 
@@ -799,7 +851,7 @@
             }
 
             function updateCartCount(count) {
-                const countBadge = document.querySelector('button[onclick="openCart()"] span');
+                const countBadge = document.getElementById('cart-count-badge');
                 if (countBadge) {
                     countBadge.textContent = count;
                 }

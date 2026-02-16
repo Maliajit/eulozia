@@ -171,12 +171,29 @@
                                                 @if($attribute['type'] === 'color')
                                                     <div class="flex flex-wrap gap-2">
                                                         @foreach($attribute['values'] as $value)
-                                                            <label class="relative cursor-pointer group" title="{{ $value['label'] }}">
+                                                            @php
+                                                                // Use color_code if present, otherwise try label if it looks like a hex code
+                                                                $colorCode = $value['color_code'] ?? '';
+                                                                if (empty($colorCode) && isset($value['label']) && (Str::startsWith($value['label'], '#') || preg_match('/^[a-fA-F0-0]{3,6}$/', $value['label']))) {
+                                                                    $colorCode = $value['label'];
+                                                                }
+                                                                
+                                                                if (empty($colorCode)) $colorCode = '#ccc';
+
+                                                                if (!Str::startsWith($colorCode, '#') && !Str::startsWith($colorCode, 'rgb') && !Str::startsWith($colorCode, 'hsl')) {
+                                                                    $colorCode = '#' . $colorCode;
+                                                                }
+
+                                                                $hexVal = strtoupper(str_replace('#', '', $colorCode));
+                                                                $isWhite = in_array($hexVal, ['FFFFFF', 'FFF', 'F9F9F9', 'F3F4F6', 'EEEEEE', 'E5E7EB']);
+                                                                $isBlack = in_array($hexVal, ['000000', '000', '111111', '1F2937']);
+                                                            @endphp
+                                                            <label class="relative cursor-pointer group" title="{{ $value['value'] ?? $value['label'] }}">
                                                                 <input type="checkbox" name="attribute_value[]" value="{{ $value['id'] }}" 
                                                                     class="filter-checkbox hidden" {{ request()->filled('attribute_value') && in_array($value['id'], (array)request('attribute_value')) ? 'checked' : '' }}>
-                                                                <span class="block w-8 h-8 rounded-full border-2 border-transparent group-hover:scale-110 transition-all" 
-                                                                    style="background-color: {{ $value['color_code'] ?? '#ccc' }};"></span>
-                                                                <svg class="absolute inset-0 m-auto w-4 h-4 text-white opacity-0 transition-opacity checked-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <span class="block w-8 h-8 rounded-full border-2 {{ $isWhite ? 'border-gray-300' : ($isBlack ? 'border-gray-700' : 'border-transparent') }} group-hover:scale-110 transition-all shadow-sm" 
+                                                                    style="background-color: {{ $colorCode }};"></span>
+                                                                <svg class="absolute inset-0 m-auto w-4 h-4 {{ $isWhite ? 'text-gray-900' : 'text-white' }} opacity-0 transition-opacity checked-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                                                                 </svg>
                                                             </label>

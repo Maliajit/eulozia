@@ -17,9 +17,6 @@
                     </svg>
                 </button>
             </div>
-            <div class="mt-2 bg-red-600 text-secondary text-sm py-1 px-3 rounded-full inline-block">
-                Sale ends in: <span class="font-bold">02h 30m 47s</span>
-            </div>
         </div>
 
         <!-- SCROLLABLE CART CONTENT -->
@@ -80,6 +77,9 @@
 
         // Update Total
         if (totalDisplay) totalDisplay.textContent = `₹${(cart.grand_total || 0).toLocaleString('en-IN')}`;
+
+        // Update Global Header Count Badge
+        updateGlobalCount(cart.items_count || 0);
 
         if (!cart.items || cart.items.length === 0) {
             contentContainer.innerHTML = '<p class="text-secondary text-center py-8">Your cart is empty.</p>';
@@ -152,7 +152,7 @@
     }
 
     function updateGlobalCount(count) {
-        const countBadge = document.querySelector('button[onclick="openCart()"] span');
+        const countBadge = document.getElementById('cart-count-badge');
         if (countBadge) countBadge.textContent = count;
     }
 

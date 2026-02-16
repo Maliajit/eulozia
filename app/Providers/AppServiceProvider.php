@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use App\Models\Category;
+use App\Helpers\CartHelper;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,7 +27,14 @@ class AppServiceProvider extends ServiceProvider
                 ->orderBy('sort_order', 'asc')
                 ->take(5)
                 ->get();
-            $view->with('headerCategories', $headerCategories);
+
+            $cartHelper = app(CartHelper::class);
+            $cartCount = $cartHelper->getCartCount();
+
+            $view->with([
+                'headerCategories' => $headerCategories,
+                'cartCount' => $cartCount
+            ]);
         });
     }
 }

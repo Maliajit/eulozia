@@ -21,6 +21,9 @@ use Illuminate\Support\Str;
 class CheckoutService
 {
     protected RazorpayService $razorpayService;
+    protected CartHelper $cartHelper;
+    protected array $cart;
+    protected $customer;
 
     public function __construct(CartHelper $cartHelper, RazorpayService $razorpayService)
     {
@@ -159,7 +162,7 @@ class CheckoutService
             }
 
             // PRICE RE-VALIDATION (Security)
-            if ((float)$variant->price !== (float)$item['unit_price']) {
+            if ((float) $variant->price !== (float) $item['unit_price']) {
                 Log::warning('Price discrepancy detected for variant', [
                     'sku' => $item['sku'],
                     'session_price' => $item['unit_price'],
@@ -384,17 +387,17 @@ class CheckoutService
     {
         try {
             $prefix = $type === 'shipping' ? '' : 'billing_';
-            $useShipping = $type === 'billing' && ($checkoutData['same_as_shipping'] ?? true);
 
+            // If the merged full_name/address fields exist, use them
             $address = [
-                'name' => $checkoutData[$prefix . 'name'] ?? $checkoutData['full_name'],
+                'name' => $checkoutData[$prefix . 'name'] ?? $checkoutData['full_name'] ?? ($checkoutData['firstName'] . ' ' . $checkoutData['lastName']),
                 'email' => $checkoutData[$prefix . 'email'] ?? $checkoutData['email'],
                 'phone' => $checkoutData[$prefix . 'phone'] ?? $checkoutData['phone'],
                 'address' => $checkoutData[$prefix . 'address'] ?? $checkoutData['address'],
                 'address2' => $checkoutData[$prefix . 'address2'] ?? $checkoutData['address2'] ?? null,
                 'city' => $checkoutData[$prefix . 'city'] ?? $checkoutData['city'],
                 'state' => $checkoutData[$prefix . 'state'] ?? $checkoutData['state'],
-                'country' => $checkoutData[$prefix . 'country'] ?? $checkoutData['country'],
+                'country' => $checkoutData[$prefix . 'country'] ?? $checkoutData['country'] ?? 'India',
                 'pincode' => $checkoutData[$prefix . 'pincode'] ?? $checkoutData['pincode'],
             ];
 

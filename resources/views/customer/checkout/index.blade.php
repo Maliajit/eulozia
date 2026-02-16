@@ -51,192 +51,142 @@
             <!-- Left Column - Forms -->
             <div class="lg:col-span-2 space-y-6">
                 
-                <!-- Customer Information -->
-                <div class="bg-primary p-6 rounded-lg shadow-lg border border-gray-800">
-                    <h2 class="text-2xl font-semibold mb-6 text-secondary flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        Contact Information
-                    </h2>
                     <form id="checkoutForm">
                         @csrf
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-secondary mb-2">First Name *</label>
-                                <input type="text" name="firstName" required
+                        <div class="bg-primary p-6 rounded-lg shadow-lg border border-gray-800 mb-6">
+                            <h2 class="text-2xl font-semibold mb-6 text-secondary flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                Contact Information
+                            </h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-secondary mb-2">First Name *</label>
+                                    <input type="text" name="firstName" required
+                                        class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-secondary mb-2">Last Name *</label>
+                                    <input type="text" name="lastName" required
+                                        class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary">
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <label class="block text-sm font-medium text-secondary mb-2">Email *</label>
+                                <input type="email" name="email" required
                                     class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary">
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-secondary mb-2">Last Name *</label>
-                                <input type="text" name="lastName" required
-                                    class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary">
+                            <div class="mt-4">
+                                <label class="block text-sm font-medium text-secondary mb-2">Phone Number *</label>
+                                <input type="tel" name="phone" required pattern="[0-9]{10}"
+                                    class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary"
+                                    placeholder="10-digit mobile number"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10);"
+                                    inputmode="numeric"
+                                    maxlength="10"
+                                    minlength="10">
                             </div>
                         </div>
-                        <div class="mt-4">
-                            <label class="block text-sm font-medium text-secondary mb-2">Email *</label>
-                            <input type="email" name="email" required
-                                class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary">
+
+                        <!-- Shipping Address -->
+                        <div class="bg-primary p-6 rounded-lg shadow-lg border border-gray-800 mb-6">
+                            <h2 class="text-2xl font-semibold mb-6 text-secondary flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                Shipping Address
+                            </h2>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-secondary mb-2">Address Line 1 *</label>
+                                    <input type="text" name="address1" required
+                                        class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary"
+                                        placeholder="House No., Building Name">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-secondary mb-2">Address Line 2</label>
+                                    <input type="text" name="address2"
+                                        class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary"
+                                        placeholder="Area, Street, Sector, Village">
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-secondary mb-2">City *</label>
+                                        <input type="text" name="city" required
+                                            class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-secondary mb-2">State *</label>
+                                        <select name="state" required
+                                            class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary appearance-none">
+                                            <option value="">Select State</option>
+                                            @foreach(['Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'] as $state)
+                                                <option value="{{ $state }}">{{ $state }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-secondary mb-2">PIN Code *</label>
+                                        <input type="text" name="pincode" required pattern="[0-9]{6}" maxlength="6"
+                                            class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary"
+                                            placeholder="6-digit PIN code"
+                                            oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 6);"
+                                            inputmode="numeric"
+                                            maxlength="6"
+                                            minlength="6">
+                                        <div id="pincode-status" class="mt-2 text-sm hidden"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-secondary mb-2">Landmark</label>
+                                        <input type="text" name="landmark"
+                                            class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="mt-4">
-                            <label class="block text-sm font-medium text-secondary mb-2">Phone Number *</label>
-                            <input type="tel" name="phone" required pattern="[0-9]{10}"
-                                class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary"
-                                placeholder="10-digit mobile number"
-                                oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10);"
-                                inputmode="numeric"
-                                maxlength="10"
-                                minlength="10">
+
+                        <!-- Payment Method -->
+                        <div class="bg-primary p-6 rounded-lg shadow-lg border border-gray-800 mb-6">
+                            <h2 class="text-2xl font-semibold mb-6 text-secondary flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                </svg>
+                                Payment Method
+                            </h2>
+                            <div class="space-y-3">
+                                @if(isset($paymentMethods['online']) && $paymentMethods['online']['available'])
+                                <label class="flex items-center p-4 bg-gray-900 rounded-lg cursor-pointer border border-gray-700 hover:border-accent transition-colors">
+                                    <input type="radio" name="payment_method" value="online" checked class="mr-4 w-5 h-5 accent-accent">
+                                    <div class="flex-1">
+                                        <p class="font-semibold text-secondary">Pay Online (Razorpay)</p>
+                                        <p class="text-sm text-gray-400">Credit/Debit Card, UPI, Net Banking, Wallet</p>
+                                    </div>
+                                    <div class="bg-white p-1 rounded">
+                                        <img src="https://razorpay.com/assets/razorpay-glyph.svg" alt="Razorpay" class="h-6">
+                                    </div>
+                                </label>
+                                @endif
+
+                                @if(isset($paymentMethods['cod']) && $paymentMethods['cod']['available'])
+                                <label class="flex items-center p-4 bg-gray-900 rounded-lg cursor-pointer border border-gray-700 hover:border-accent transition-colors">
+                                    <input type="radio" name="payment_method" value="cod" {{ !(isset($paymentMethods['online']) && $paymentMethods['online']['available']) ? 'checked' : '' }} class="mr-4 w-5 h-5 accent-accent">
+                                    <div class="flex-1">
+                                        <p class="font-semibold text-secondary">Cash on Delivery</p>
+                                        <p class="text-sm text-gray-400">Pay when you receive your order</p>
+                                    </div>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    </svg>
+                                </label>
+                                @endif
+                                <input type="hidden" name="terms_agree" value="1">
+                            </div>
                         </div>
                     </form>
-                </div>
-
-                <!-- Shipping Address -->
-                <div class="bg-primary p-6 rounded-lg shadow-lg border border-gray-800">
-                    <h2 class="text-2xl font-semibold mb-6 text-secondary flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        Shipping Address
-                    </h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-secondary mb-2">Address Line 1 *</label>
-                            <input type="text" name="address1" required
-                                class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary"
-                                placeholder="House No., Building Name">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-secondary mb-2">Address Line 2</label>
-                            <input type="text" name="address2"
-                                class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary"
-                                placeholder="Area, Street, Sector, Village">
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-secondary mb-2">City *</label>
-                                <input type="text" name="city" required
-                                    class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-secondary mb-2">State *</label>
-                                <select name="state" required
-                                    class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary appearance-none">
-                                    <option value="">Select State</option>
-                                    @foreach(['Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'] as $state)
-                                        <option value="{{ $state }}">{{ $state }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-secondary mb-2">PIN Code *</label>
-                                <input type="text" name="pincode" required pattern="[0-9]{6}" maxlength="6"
-                                    class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary"
-                                    placeholder="6-digit PIN code"
-                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 6);"
-                                    inputmode="numeric"
-                                    maxlength="6"
-                                    minlength="6">
-                                <div id="pincode-status" class="mt-2 text-sm hidden"></div>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-secondary mb-2">Landmark</label>
-                                <input type="text" name="landmark"
-                                    class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Shipping Method (Delhivery) -->
-                <div class="bg-primary p-6 rounded-lg shadow-lg border border-gray-800">
-                    <h2 class="text-2xl font-semibold mb-6 text-secondary flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
-                        </svg>
-                        Shipping Method
-                    </h2>
-                    <div class="space-y-3">
-                        <label class="flex items-center p-4 bg-gray-900 rounded-lg cursor-pointer border border-gray-700 hover:border-accent transition-colors">
-                            <input type="radio" name="shipping" value="standard" checked class="mr-4 w-5 h-5 accent-accent">
-                            <div class="flex-1">
-                                <div class="flex justify-between items-center">
-                                    <div>
-                                        <p class="font-semibold text-secondary">Standard Delivery</p>
-                                        <p class="text-sm text-gray-400">Delivered by Delhivery • 5-7 business days</p>
-                                    </div>
-                                    <span class="font-semibold text-secondary">₹99</span>
-                                </div>
-                            </div>
-                        </label>
-                        <label class="flex items-center p-4 bg-gray-900 rounded-lg cursor-pointer border border-gray-700 hover:border-accent transition-colors">
-                            <input type="radio" name="shipping" value="express" class="mr-4 w-5 h-5 accent-accent">
-                            <div class="flex-1">
-                                <div class="flex justify-between items-center">
-                                    <div>
-                                        <p class="font-semibold text-secondary">Express Delivery</p>
-                                        <p class="text-sm text-gray-400">Delivered by Delhivery • 2-3 business days</p>
-                                    </div>
-                                    <span class="font-semibold text-secondary">₹199</span>
-                                </div>
-                            </div>
-                        </label>
-                        <label class="flex items-center p-4 bg-gray-900 rounded-lg cursor-pointer border border-gray-700 hover:border-accent transition-colors">
-                            <input type="radio" name="shipping" value="overnight" class="mr-4 w-5 h-5 accent-accent">
-                            <div class="flex-1">
-                                <div class="flex justify-between items-center">
-                                    <div>
-                                        <p class="font-semibold text-secondary">Same Day Delivery</p>
-                                        <p class="text-sm text-gray-400">Delivered by Delhivery • Within 24 hours</p>
-                                        <p class="text-xs text-green-500 mt-1">Available in select cities</p>
-                                    </div>
-                                    <span class="font-semibold text-secondary">₹299</span>
-                                </div>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Payment Method -->
-                <div class="bg-primary p-6 rounded-lg shadow-lg border border-gray-800">
-                    <h2 class="text-2xl font-semibold mb-6 text-secondary flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                        </svg>
-                        Payment Method
-                    </h2>
-                    <div class="space-y-3">
-                        @if(isset($paymentMethods['online']) && $paymentMethods['online']['available'])
-                        <label class="flex items-center p-4 bg-gray-900 rounded-lg cursor-pointer border border-gray-700 hover:border-accent transition-colors">
-                            <input type="radio" name="payment_method" value="online" checked class="mr-4 w-5 h-5 accent-accent">
-                            <div class="flex-1">
-                                <p class="font-semibold text-secondary">Pay Online (Razorpay)</p>
-                                <p class="text-sm text-gray-400">Credit/Debit Card, UPI, Net Banking, Wallet</p>
-                            </div>
-                            <div class="bg-white p-1 rounded">
-                                <img src="https://razorpay.com/assets/razorpay-glyph.svg" alt="Razorpay" class="h-6">
-                            </div>
-                        </label>
-                        @endif
-
-                        @if(isset($paymentMethods['cod']) && $paymentMethods['cod']['available'])
-                        <label class="flex items-center p-4 bg-gray-900 rounded-lg cursor-pointer border border-gray-700 hover:border-accent transition-colors">
-                            <input type="radio" name="payment_method" value="cod" {{ !(isset($paymentMethods['online']) && $paymentMethods['online']['available']) ? 'checked' : '' }} class="mr-4 w-5 h-5 accent-accent">
-                            <div class="flex-1">
-                                <p class="font-semibold text-secondary">Cash on Delivery</p>
-                                <p class="text-sm text-gray-400">Pay when you receive your order</p>
-                            </div>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                        </label>
-                        @endif
-                    </div>
-                </div>
 
             </div>
 

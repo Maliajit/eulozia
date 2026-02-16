@@ -60,7 +60,7 @@ class CheckoutController extends Controller
         session(['checkout_in_progress' => true]);
 
         try {
-            // Final check for Delhivery serviceability
+            /* Bypassed for now as per user request
             $pincode = $request->pincode;
             $serviceability = $this->delhiveryService->checkServiceability($pincode);
 
@@ -68,6 +68,7 @@ class CheckoutController extends Controller
                 session()->forget('checkout_in_progress');
                 return back()->with('error', $serviceability['message'])->withInput();
             }
+            */
 
             // Enforce shipping cost calculation
             $cart = $this->cartHelper->getCart();
@@ -80,7 +81,9 @@ class CheckoutController extends Controller
                 return $response;
             }
 
-            return $this->processOnlinePayment($request);
+            $response = $this->processOnlinePayment($request);
+            session()->forget('checkout_in_progress');
+            return $response;
         } catch (\Exception $e) {
             session()->forget('checkout_in_progress');
             Log::error('Checkout processing failed', ['error' => $e->getMessage()]);
@@ -97,7 +100,11 @@ class CheckoutController extends Controller
         $result = $this->checkoutService->placeOrder($request->all());
 
         if (!empty($result['order'])) {
-            $this->delhiveryService->createOrder($result['order']);
+            try {
+                $this->delhiveryService->createOrder($result['order']);
+            } catch (\Exception $e) {
+                Log::error('Delhivery order creation failed: ' . $e->getMessage());
+            }
         }
 
         return redirect()
@@ -223,29 +230,15 @@ class CheckoutController extends Controller
         $request->validate(['pincode' => 'required']);
 
         $cart = $this->cartHelper->getCart();
-        $weight = $this->calculateCartWeight($cart);
-        $dimensions = $this->calculateCartDimensions($cart);
 
-        // 1. Check Serviceability via Delhivery
-        $serviceability = $this->delhiveryService->checkServiceability($request->pincode, $weight, $dimensions);
-
-        if (!$serviceability['success']) {
-            return response()->json($serviceability);
-        }
-
-        // 2. Determine Best ETA
-        $eta = $serviceability['estimated_delivery'] ?? 5;
-
-        // 3. Fetch City & State
-        $city = $serviceability['city'] ?? null;
-        $state = $serviceability['state'] ?? null;
-
-        // 4. Apply Custom Shipping Logic
+        // Bypassing real check for now as per user request
+        $eta = 5;
+        $city = 'Bypassed';
+        $state = 'Bypassed';
         $customCost = $this->calculateShippingCost($cart);
 
-        // 5. Construct Single "Standard Delivery" Option
         $customOption = [
-            'courier_id' => 'standard', // Custom ID
+            'courier_id' => 'standard',
             'name' => 'Standard Delivery',
             'rate' => $customCost,
             'estimated_days' => $eta,
@@ -258,7 +251,6 @@ class CheckoutController extends Controller
             'estimated_delivery' => $eta,
             'city' => $city,
             'state' => $state,
-            // 'raw_data' => $serviceability['raw_data'] ?? null // Debugging
         ]);
     }
 
@@ -362,20 +354,28 @@ class CheckoutController extends Controller
     private function validateCheckout(Request $request): void
     {
         Validator::make($request->all(), [
-            'full_name' => 'required|string|max:255',
+            'firstName' => 'required|string|max:100',
+            'lastName' => 'required|string|max:100',
             'email' => 'required|email|max:255',
-            'phone' => ['required', 'string', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10', 'max:15'],
-            'address' => 'required|string|max:500',
+            'phone' => ['required', 'string', 'min:10', 'max:15'],
+            'address1' => 'required|string|max:255',
+            'address2' => 'nullable|string|max:255',
             'city' => 'required|string|max:100',
             'state' => 'required|string|max:100',
             'pincode' => ['required', 'string', 'regex:/^[1-9][0-9]{5}$/'],
             'payment_method' => ['required', Rule::in(['online', 'cod'])],
-            'terms_agree' => 'accepted',
+            'terms_agree' => 'required',
         ], [
             'pincode.regex' => 'Please enter a valid 6-digit pincode.',
-            'phone.regex' => 'Please enter a valid phone number.',
-            'terms_agree.accepted' => 'You must agree to the terms and conditions.'
+            'terms_agree.required' => 'You must agree to the terms and conditions.'
         ])->validate();
+
+        // Merge fields for Service consumption
+        $request->merge([
+            'full_name' => $request->firstName . ' ' . $request->lastName,
+            'address' => $request->address1 . ($request->address2 ? ', ' . $request->address2 : ''),
+            'country' => 'India' // Default if not in form
+        ]);
     }
 
     /* =====================================================

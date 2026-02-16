@@ -42,20 +42,13 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $loginField = $request->input('email');
-        $loginType = filter_var($loginField, FILTER_VALIDATE_EMAIL) ? 'email' : 'mobile';
-
         $rules = [
-            'email' => 'required',
+            'email' => 'required|email',
             'password' => 'required|min:4'
         ];
 
-        if ($loginType === 'email') {
-            $rules['email'] .= '|email';
-        }
-
         $validator = Validator::make($request->all(), $rules, [
-            'email.required' => 'Email or Phone is required',
+            'email.required' => 'Email address is required',
             'email.email' => 'Please enter a valid email address',
             'password.required' => 'Password is required',
             'password.min' => 'Password must be at least 4 characters'
@@ -69,7 +62,7 @@ class AuthController extends Controller
         }
 
         $credentials = [
-            $loginType => $loginField,
+            'email' => $request->email,
             'password' => $request->password
         ];
         $remember = $request->has('remember');
@@ -105,7 +98,7 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:100|regex:/^[a-zA-Z\s]+$/',
             'email' => 'required|email|max:150|unique:customers,email',
-            'mobile' => 'required|string|max:20|unique:customers,mobile|regex:/^[0-9]{10,15}$/',
+            'mobile' => 'required|string|digits:10|unique:customers,mobile|regex:/^[0-9]{10}$/',
             'password' => [
                 'required',
                 'min:4',
@@ -119,7 +112,8 @@ class AuthController extends Controller
             'email.email' => 'Please enter a valid email address',
             'email.unique' => 'This email is already registered',
             'mobile.required' => 'Mobile number is required',
-            'mobile.regex' => 'Please enter a valid 10-15 digit mobile number',
+            'mobile.digits' => 'Mobile number must be exactly 10 digits',
+            'mobile.regex' => 'Please enter a valid 10-digit mobile number',
             'mobile.unique' => 'This mobile number is already registered',
             'password.required' => 'Password is required',
             'password.min' => 'Password must be at least 4 characters',

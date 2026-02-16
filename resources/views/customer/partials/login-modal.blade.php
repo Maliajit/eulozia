@@ -56,17 +56,23 @@
 
                 @csrf
                 <div>
-                    <label for="loginEmail" class="block text-sm font-medium text-secondary mb-2">Email or Phone</label>
-                    <input type="text" id="loginEmail" name="email"
-                        class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent"
-                        placeholder="Enter your email or phone number" required>
+                    <label for="loginEmail" class="block text-sm font-medium text-secondary mb-2">Email Address</label>
+                    <input type="email" id="loginEmail" name="email"
+                        class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent @error('email') border-red-500 @enderror"
+                        placeholder="Enter your email address" value="{{ old('email') }}" required>
+                    @error('email')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
                     <label for="loginPassword" class="block text-sm font-medium text-secondary mb-2">Password</label>
                     <input type="password" id="loginPassword" name="password"
-                        class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent"
+                        class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent @error('password') border-red-500 @enderror"
                         placeholder="Enter your password" required>
+                    @error('password')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div class="flex items-center justify-between">
@@ -152,6 +158,16 @@
                 closeLoginModal();
             }
         });
+
+        // Re-open if there were login errors
+        @if(session('form') === 'login' || ($errors->any() && session('form') === 'login'))
+            openLoginModal();
+            @if($errors->any())
+                if (typeof showToast === 'function') {
+                    showToast('{{ $errors->first() }}', 'error');
+                }
+            @endif
+        @endif
     });
 
     // Make openLoginModal globally available

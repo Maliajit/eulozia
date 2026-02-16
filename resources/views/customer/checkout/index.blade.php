@@ -82,7 +82,11 @@
                             <label class="block text-sm font-medium text-secondary mb-2">Phone Number *</label>
                             <input type="tel" name="phone" required pattern="[0-9]{10}"
                                 class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary"
-                                placeholder="10-digit mobile number">
+                                placeholder="10-digit mobile number"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10);"
+                                inputmode="numeric"
+                                maxlength="10"
+                                minlength="10">
                         </div>
                     </form>
                 </div>
@@ -131,7 +135,11 @@
                                 <label class="block text-sm font-medium text-secondary mb-2">PIN Code *</label>
                                 <input type="text" name="pincode" required pattern="[0-9]{6}" maxlength="6"
                                     class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary"
-                                    placeholder="6-digit PIN code">
+                                    placeholder="6-digit PIN code"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 6);"
+                                    inputmode="numeric"
+                                    maxlength="6"
+                                    minlength="6">
                                 <div id="pincode-status" class="mt-2 text-sm hidden"></div>
                             </div>
                             <div>

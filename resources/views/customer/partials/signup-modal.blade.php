@@ -57,29 +57,43 @@
                 <div>
                     <label for="signupName" class="block text-sm font-medium text-secondary mb-2">Full Name</label>
                     <input type="text" id="signupName" name="name"
-                        class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent"
-                        placeholder="Enter your full name" required>
+                        class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent @error('name') border-red-500 @enderror"
+                        placeholder="Enter your full name" value="{{ old('name') }}" required>
+                    @error('name')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
                     <label for="signupEmail" class="block text-sm font-medium text-secondary mb-2">Email Address</label>
                     <input type="email" id="signupEmail" name="email"
-                        class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent"
-                        placeholder="Enter your email" required>
+                        class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent @error('email') border-red-500 @enderror"
+                        placeholder="Enter your email" value="{{ old('email') }}" required>
+                    @error('email')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
                     <label for="signupPhone" class="block text-sm font-medium text-secondary mb-2">Phone Number</label>
                     <input type="tel" id="signupPhone" name="mobile"
-                        class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent"
-                        placeholder="Enter your phone number">
+                        class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent @error('mobile') border-red-500 @enderror"
+                        placeholder="Enter 10-digit mobile number" value="{{ old('mobile') }}"
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10);" pattern="[0-9]{10}"
+                        maxlength="10" minlength="10" inputmode="numeric" required>
+                    @error('mobile')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
                     <label for="signupPassword" class="block text-sm font-medium text-secondary mb-2">Password</label>
                     <input type="password" id="signupPassword" name="password"
-                        class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent"
+                        class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent @error('password') border-red-500 @enderror"
                         placeholder="Create a password" required>
+                    @error('password')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
                     <div class="mt-1 text-xs text-accent" id="passwordStrength"></div>
                 </div>
 
@@ -87,13 +101,17 @@
                     <label for="signupConfirmPassword" class="block text-sm font-medium text-secondary mb-2">Confirm
                         Password</label>
                     <input type="password" id="signupConfirmPassword" name="password_confirmation"
-                        class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent"
+                        class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent @error('password_confirmation') border-red-500 @enderror"
                         placeholder="Confirm your password" required>
+                    @error('password_confirmation')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <label class="flex items-start space-x-3">
                     <input type="checkbox" name="terms"
-                        class="mt-1 rounded bg-gray-800 border-gray-700 text-accent focus:ring-accent" required>
+                        class="mt-1 rounded bg-gray-800 border-gray-700 text-accent focus:ring-accent @error('terms') border-red-500 @enderror"
+                        required>
                     <span class="text-sm text-accent">
                         I agree to the <a href="#"
                             class="text-secondary hover:text-accent transition-colors duration-300">Terms &
@@ -101,6 +119,9 @@
                         and <a href="#" class="text-secondary hover:text-accent transition-colors duration-300">Privacy
                             Policy</a>
                     </span>
+                    @error('terms')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
                 </label>
 
                 <button type="submit"
@@ -195,6 +216,10 @@
                 closeSignupModal();
             }
         });
+
+        // Re-open if there were signup errors
+        @if(session('form') === 'register' || ($errors->any() && session('form') === 'register'))         openSignupModal();         @if($errors->any())         if (typeof showToast === 'function') { showToast('{{ $errors->first() }}', 'error'); } @endif
+        @endif
     });
 
     // Make openSignupModal globally available

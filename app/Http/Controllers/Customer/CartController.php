@@ -18,15 +18,7 @@ class CartController extends Controller
 
     public function index()
     {
-        $cart = $this->cartHelper->getCart();
-
-        // Get recommended products
-        $recommendedProducts = [];
-        if (count($cart['items'] ?? []) > 0) {
-            $recommendedProducts = $this->getRecommendedProducts();
-        }
-
-        return view('customer.cart.index', compact('cart', 'recommendedProducts'));
+        return redirect()->route('customer.home.index');
     }
 
     public function addItem(Request $request)

@@ -34,8 +34,8 @@ class CheckoutController extends Controller
         $cart = $this->cartHelper->getCart();
 
         if (empty($cart['items'])) {
-            return redirect()->route('customer.cart')
-                ->with('error', 'Your cart is empty.');
+            return redirect()->route('customer.home.index')
+                ->with('error', 'Your cart is empty. Please add some products to proceed.');
         }
 
         return view('customer.checkout.index', [

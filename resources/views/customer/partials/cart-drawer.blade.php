@@ -32,15 +32,15 @@
                 <span class="text-secondary font-bold text-lg">₹0</span>
             </div>
             @auth('customer')
-                <a href="{{ route('customer.checkout.index') }}">
-                    <button
-                        class="w-full bg-accent text-primary py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 transition mb-3">
+                <a href="{{ route('customer.checkout.index') }}" id="checkoutLink">
+                    <button id="checkoutBtn"
+                        class="w-full bg-accent text-primary py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 transition mb-3 disabled:opacity-50 disabled:cursor-not-allowed">
                         PROCEED TO BUY
                     </button>
                 </a>
             @else
-                <button onclick="handleUnauthenticatedCheckout()"
-                    class="w-full bg-accent text-primary py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 transition mb-3">
+                <button id="checkoutBtn" onclick="handleUnauthenticatedCheckout()"
+                    class="w-full bg-accent text-primary py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 transition mb-3 disabled:opacity-50 disabled:cursor-not-allowed">
                     PROCEED TO BUY
                 </button>
             @endauth
@@ -89,8 +89,42 @@
         updateGlobalCount(cart.items_count || 0);
 
         if (!cart.items || cart.items.length === 0) {
-            contentContainer.innerHTML = '<p class="text-secondary text-center py-8">Your cart is empty.</p>';
+            contentContainer.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
+                    <div class="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mb-4">
+                        <svg class="w-10 h-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-secondary text-lg font-semibold mb-2">Your cart is empty</h3>
+                    <p class="text-gray-400 text-sm mb-8">Looks like you haven't added anything to your cart yet.</p>
+                    <button onclick="closeCart()" class="bg-accent text-primary py-3 px-8 rounded-lg font-bold hover:bg-gray-300 transition duration-300">
+                        SHOP NOW
+                    </button>
+                </div>
+            `;
+            // Disable checkout button
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            if (checkoutBtn) {
+                checkoutBtn.disabled = true;
+                checkoutBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+            const checkoutLink = document.getElementById('checkoutLink');
+            if (checkoutLink) {
+                checkoutLink.style.pointerEvents = 'none';
+            }
             return;
+        }
+
+        // Enable checkout button
+        const checkoutBtn = document.getElementById('checkoutBtn');
+        if (checkoutBtn) {
+            checkoutBtn.disabled = false;
+            checkoutBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+        const checkoutLink = document.getElementById('checkoutLink');
+        if (checkoutLink) {
+            checkoutLink.style.pointerEvents = 'auto';
         }
 
         let html = '<div class="space-y-4">';

@@ -48,4 +48,9 @@ return [
         'pickup_location' => env('SHIPROCKET_PICKUP_LOCATION', 'Primary'),
     ],
 
+    'delhivery' => [
+        'base_url' => env('DELHIVERY_BASE_URL', 'https://track.delhivery.com/'),
+        'api_token' => env('DELHIVERY_API_TOKEN'),
+    ],
+
 ];

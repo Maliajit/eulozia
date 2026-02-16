@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Services\Customer\CheckoutService;
 use App\Services\Customer\RazorpayService;
-use App\Services\Customer\ShiprocketService;
+use App\Services\Customer\DelhiveryService;
 use App\Helpers\CartHelper;
 use App\Models\Order;
 use App\Models\ProductVariant;
@@ -22,7 +22,7 @@ class CheckoutController extends Controller
         protected CheckoutService $checkoutService,
         protected CartHelper $cartHelper,
         protected RazorpayService $razorpayService,
-        protected ShiprocketService $shiprocketService
+        protected DelhiveryService $delhiveryService
     ) {
     }
 
@@ -60,15 +60,15 @@ class CheckoutController extends Controller
         session(['checkout_in_progress' => true]);
 
         try {
-            // Final check for Shiprocket serviceability
+            // Final check for Delhivery serviceability
             $pincode = $request->pincode;
-            $serviceability = $this->shiprocketService->getExternalPostcodeDetails($pincode);
-            
-            if (empty($serviceability['data']['available_courier_companies'])) {
+            $serviceability = $this->delhiveryService->checkServiceability($pincode);
+
+            if (!$serviceability['success']) {
                 session()->forget('checkout_in_progress');
-                return back()->with('error', 'Sorry, we do not currently ship to this pincode (' . $pincode . ').')->withInput();
+                return back()->with('error', $serviceability['message'])->withInput();
             }
-            
+
             // Enforce shipping cost calculation
             $cart = $this->cartHelper->getCart();
             $shippingCost = $this->calculateShippingCost($cart);
@@ -97,7 +97,7 @@ class CheckoutController extends Controller
         $result = $this->checkoutService->placeOrder($request->all());
 
         if (!empty($result['order'])) {
-            $this->shiprocketService->createOrder($result['order']);
+            $this->delhiveryService->createOrder($result['order']);
         }
 
         return redirect()
@@ -182,11 +182,11 @@ class CheckoutController extends Controller
                 $result = $this->checkoutService->placeOrder($checkoutData, $paymentData);
 
                 if (!empty($result['order'])) {
-                    // Try to create shiprocket order
+                    // Try to create delhivery order
                     try {
-                        $this->shiprocketService->createOrder($result['order']);
+                        $this->delhiveryService->createOrder($result['order']);
                     } catch (\Exception $e) {
-                        Log::error('Shiprocket order creation failed on callback', ['error' => $e->getMessage()]);
+                        Log::error('Delhivery order creation failed on callback', ['error' => $e->getMessage()]);
                     }
 
                     session()->forget(['checkout_data', 'razorpay_order_id', 'checkout_in_progress', 'callback_in_progress']);
@@ -225,40 +225,20 @@ class CheckoutController extends Controller
         $cart = $this->cartHelper->getCart();
         $weight = $this->calculateCartWeight($cart);
         $dimensions = $this->calculateCartDimensions($cart);
-        
-        // 1. Check Serviceability via Shiprocket
-        $serviceability = $this->shiprocketService->checkServiceability($request->pincode, $weight, $dimensions);
+
+        // 1. Check Serviceability via Delhivery
+        $serviceability = $this->delhiveryService->checkServiceability($request->pincode, $weight, $dimensions);
 
         if (!$serviceability['success']) {
-             return response()->json($serviceability);
+            return response()->json($serviceability);
         }
 
-        // 2. Determine Best ETA (Optional: take min days from options)
-        $eta = 5; // Default fallback
-        if (!empty($serviceability['available_couriers'])) {
-            $days = array_column($serviceability['available_couriers'], 'estimated_days');
-            if (!empty($days)) {
-                $eta = min($days); // Be optimistic? Or average? Using min is good.
-            }
-        }
+        // 2. Determine Best ETA
+        $eta = $serviceability['estimated_delivery'] ?? 5;
 
-        // 3. Fetch City & State (Pincode Lookup)
-        $city = null;
-        $state = null;
-        
-        $pinResponse = $this->shiprocketService->getExternalPostcodeDetails($request->pincode);
-        
-        if ($pinResponse['success']) {
-            $details = $pinResponse['data']['postcode_details'] ?? null;
-            if ($details) {
-                $city = $details['city'] ?? null;
-                $state = $details['state'] ?? null;
-            }
-        }
-        
-        // Fallback: If Shiprocket fails or returns empty, try the open API directly locally if needed, 
-        // but user requested Shiprocket data. If empty, maybe leave as null or try postalpincode as last resort.
-        // For now, we stick to Shiprocket.
+        // 3. Fetch City & State
+        $city = $serviceability['city'] ?? null;
+        $state = $serviceability['state'] ?? null;
 
         // 4. Apply Custom Shipping Logic
         $customCost = $this->calculateShippingCost($cart);
@@ -281,7 +261,7 @@ class CheckoutController extends Controller
             // 'raw_data' => $serviceability['raw_data'] ?? null // Debugging
         ]);
     }
-    
+
     public function createRazorpayOrder(Request $request)
     {
         $cart = $this->cartHelper->getCart();
@@ -295,7 +275,7 @@ class CheckoutController extends Controller
 
         // Calculate shipping cost securely
         $shippingCost = $this->calculateShippingCost($cart);
-        
+
         // Prepare data securely
         $data = $request->all();
         $data['shipping_cost'] = $shippingCost;
@@ -314,23 +294,23 @@ class CheckoutController extends Controller
 
         return response()->json($razorpayOrder);
     }
-    
+
     // --- Custom Logic ---
     private function calculateShippingCost($cart): float
     {
         // Logic: Fixed 69, Free if > 1999
         $threshold = 1999;
         $fixedRate = 69;
-        
+
         // Ensure we check numeric value
         $subtotal = (float) $cart['subtotal'];
-        
+
         // User request: "if cart value is more than 1999 then free delivery"
         // Assuming subtotal implies cart value.
         if ($subtotal > $threshold) {
             return 0;
         }
-        
+
         return $fixedRate;
     }
 
@@ -344,16 +324,19 @@ class CheckoutController extends Controller
         $maxHeight = 10;
 
         foreach ($cart['items'] as $item) {
-             $variant = ProductVariant::where('sku', $item['sku'])->first();
-             // Prioritize variant > product > default 10
-             
-             $l = $variant->length ?? ($item->product->length ?? 10);
-             $w = $variant->width ?? ($item->product->width ?? 10);
-             $h = $variant->height ?? ($item->product->height ?? 10);
-             
-             if ($l > $maxLength) $maxLength = $l;
-             if ($w > $maxWidth) $maxWidth = $w;
-             if ($h > $maxHeight) $maxHeight = $h;
+            $variant = ProductVariant::where('sku', $item['sku'])->first();
+            // Prioritize variant > product > default 10
+
+            $l = $variant->length ?? ($item->product->length ?? 10);
+            $w = $variant->width ?? ($item->product->width ?? 10);
+            $h = $variant->height ?? ($item->product->height ?? 10);
+
+            if ($l > $maxLength)
+                $maxLength = $l;
+            if ($w > $maxWidth)
+                $maxWidth = $w;
+            if ($h > $maxHeight)
+                $maxHeight = $h;
         }
 
         return [

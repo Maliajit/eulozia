@@ -132,6 +132,7 @@
                                 <input type="text" name="pincode" required pattern="[0-9]{6}" maxlength="6"
                                     class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary"
                                     placeholder="6-digit PIN code">
+                                <div id="pincode-status" class="mt-2 text-sm hidden"></div>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-secondary mb-2">Landmark</label>
@@ -374,6 +375,11 @@
         }
 
         function checkShipping(pincode) {
+            const statusDiv = document.getElementById('pincode-status');
+            statusDiv.textContent = 'Checking availability...';
+            statusDiv.classList.remove('hidden', 'text-green-500', 'text-red-500');
+            statusDiv.classList.add('text-gray-400');
+
             fetch('{{ route("customer.checkout.shipping.check") }}', {
                 method: 'POST',
                 headers: {
@@ -384,17 +390,45 @@
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success && data.available_couriers.length > 0) {
+                if (data.success && data.available_couriers && data.available_couriers.length > 0) {
                     shippingCost = data.available_couriers[0].rate;
                     document.getElementById('summary-shipping').textContent = '₹' + shippingCost;
                     updateTotal();
                     
+                    statusDiv.textContent = '✓ Delivery available to this pincode';
+                    statusDiv.classList.remove('text-gray-400', 'text-red-500', 'hidden');
+                    statusDiv.classList.add('text-green-500');
+
+                    // Update standard shipping label if it exists
+                    const standardRateEl = document.querySelector('input[name="shipping"][value="standard"]')?.closest('label')?.querySelector('.font-semibold.text-secondary:last-child');
+                    if (standardRateEl) standardRateEl.textContent = '₹' + shippingCost;
+
                     // Auto-fill city/state if available
                     if (data.city) document.querySelector('input[name="city"]').value = data.city;
-                    if (data.state) document.querySelector('select[name="state"]').value = data.state;
+                    if (data.state) {
+                        const stateSelect = document.querySelector('select[name="state"]');
+                        if (stateSelect) {
+                            // Find option that matches state name
+                            const option = Array.from(stateSelect.options).find(opt => opt.value.toLowerCase() === data.state.toLowerCase());
+                            if (option) stateSelect.value = option.value;
+                        }
+                    }
                     
                     saveFormData(); // Save auto-filled data
+                } else {
+                    statusDiv.textContent = '✕ ' + (data.message || 'Delivery not available to this pincode');
+                    statusDiv.classList.remove('text-gray-400', 'text-green-500', 'hidden');
+                    statusDiv.classList.add('text-red-500');
+                    shippingCost = 0;
+                    document.getElementById('summary-shipping').textContent = '₹0';
+                    updateTotal();
                 }
+            })
+            .catch(error => {
+                statusDiv.textContent = '✕ Error checking pincode serviceability';
+                statusDiv.classList.remove('text-gray-400', 'text-green-500', 'hidden');
+                statusDiv.classList.add('text-red-500');
+                console.error('Pincode check error:', error);
             });
         }
 

@@ -54,33 +54,18 @@
             @endif
         </section>
 
-        @php
-            $featuredSection = (isset($sections) && $sections->count() > 0) ? $sections->firstWhere('title', 'Featured Collection') : null;
-        @endphp
-
-        <!-- Featured Collection Section -->
-        @if($featuredSection)
-            <div class="container mx-auto mt-16 {{ $featuredSection->style == 'style_1' ? 'bg-primary text-secondary' : '' }}">
+        <!-- Featured Products Section -->
+        @if(isset($featuredProducts) && count($featuredProducts) > 0)
+            <div class="container mx-auto mt-16">
                 <div class="mb-20">
-                    <h1 class="text-4xl font-bold text-center mb-12">{{ $featuredSection->title }}</h1>
-                    @if($featuredSection->subtitle)
-                        <p class="text-center text-gray-500 -mt-10 mb-12">{{ $featuredSection->subtitle }}</p>
-                    @endif
+                    <h2 class="text-4xl font-bold text-center mb-4 uppercase tracking-wider">Featured Collection</h2>
+                    <p class="text-center text-gray-500 mb-12">Discover our handpicked curated collection</p>
 
-                    @if($featuredSection->products && count($featuredSection->products) > 0)
-                        <div
-                            class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 {{ $featuredSection->style == 'style_1' ? 'gap-6' : '' }}">
-                            @foreach ($featuredSection->products as $product)
-                                @if($featuredSection->style == 'style_1')
-                                @include('customer.partials.section-style-1', ['product' => $product])@elseif($featuredSection->style == 'style_2')
-                                @include('customer.partials.section-style-2', ['product' => $product])@else
-                                    @include('customer.partials.product-card', ['product' => $product])
-                                @endif
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="text-center text-gray-500 py-10">No products found in this section.</div>
-                    @endif
+                    <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 ">
+                        @foreach ($featuredProducts as $product)
+                            @include('customer.partials.product-card', ['product' => $product])
+                        @endforeach
+                    </div>
                 </div>
             </div>
         @endif
@@ -95,11 +80,11 @@
                             <a href="{{ route('customer.products.index', ['category' => $category->slug]) }}"
                                 class="flex flex-col items-center text-center group">
                                 <div
-                                    class="w-full h-40 md:h-56 flex items-center justify-center rounded-xl overflow-hidden bg-white shadow-sm group-hover:shadow-md transition-all duration-300">
+                                    class="w-full h-40 md:h-56 flex items-center justify-center overflow-hidden shadow-sm group-hover:shadow-md transition-all duration-300">
                                     @if($category->image)
                                         <img src="{{ Str::startsWith($category->image->url, 'http') ? $category->image->url : asset('storage/' . $category->image->url) }}"
                                             alt="{{ $category->name }}"
-                                            class="object-cover h-full w-full group-hover:scale-105 transition-transform duration-500">
+                                            class="object-contain h-full w-full group-hover:scale-105 transition-transform duration-500">
                                     @else
                                         <div class="flex items-center justify-center h-full w-full text-gray-300 bg-gray-100">
                                             <i class="fas fa-tshirt text-3xl"></i>

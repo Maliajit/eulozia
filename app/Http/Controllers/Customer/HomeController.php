@@ -31,21 +31,30 @@ class HomeController extends Controller
             $banners = Banner::where('status', true)->orderBy('sort_order')->get();
 
             /* ------------------------------
+             | FEATURED PRODUCTS (Fixed below banner)
+             |------------------------------*/
+            $featuredProducts = collect([]);
+            try {
+                $featuredProducts = $this->productService->getProducts(
+                    ['is_featured' => true, 'sort_by' => 'newest'],
+                    8
+                );
+            } catch (\Exception $e) {
+                Log::error('Error fetching featured products', ['error' => $e->getMessage()]);
+            }
+
+            /* ------------------------------
              | DYNAMIC HOME SECTIONS
              |------------------------------*/
             $sections = HomeSection::where('status', true)
+                ->where('type', '!=', 'featured')
+                ->where('title', '!=', 'Featured Collection')
                 ->orderBy('sort_order')
                 ->get();
 
             // Transform sections to include their products
             $sections->transform(function ($section) {
-                if ($section->title === 'Featured Collection' || $section->type === 'featured') {
-                    // Fetch products that are marked as Is Featured
-                   $section->products = $this->productService->getProducts(
-                        ['is_featured' => true, 'sort_by' => 'newest'],
-                        8
-                   );
-                } elseif ($section->type === 'category' && $section->category_id) {
+                if ($section->type === 'category' && $section->category_id) {
                     // Fetch products from category
                     // Assuming we want latest products from this category
                     $section->products = $this->productService->getProducts(
@@ -54,29 +63,17 @@ class HomeController extends Controller
                     );
                 } elseif ($section->type === 'custom_products' && !empty($section->product_ids)) {
                     // Fetch specific products
-                    // We need to fetch Product models and then map them to array format expected by view if needed
-                    // Or standard ProductService might handle query, but here we have specific IDs.
-                    // Let's use Eloquent directly for specific IDs to preserve order if possible, or just WhereIn
                     $products = Product::whereIn('id', $section->product_ids)
                         ->where('is_active', true)
                         ->get();
-                    
-                    // Service might be needed if we want formatted prices/images handling consistent with other parts
-                    // For now, let's manually format or use a helper if available. 
-                    // Actually, ProductService::getProducts mostly filters. 
-                    // Let's map the Eloquent collection to the array format used in views if the view expects arrays.
-                    // Checking view: $product['slug'], $product['images'][0]['url']
-                    // The ProductService returns mapped arrays. We should probably stick to that for consistency.
-                    
-                    // Quick fix: Use Service to hydration or just manual mapping.
-                    // Let's use a raw query compatible with service or just map it here.
-                    $section->products = $products->map(function($product) {
+
+                    $section->products = $products->map(function ($product) {
                         return $this->productService->transformProductForListing($product);
                     });
                 } else {
                     $section->products = collect([]);
                 }
-                
+
                 return $section;
             });
 
@@ -95,7 +92,7 @@ class HomeController extends Controller
             if ($banners->count() > 0 && $banners->first()->title) {
                 $breadcrumb = $banners->first()->title;
             } elseif ($sections->count() > 0) {
-                 $breadcrumb = $sections->first()->title;
+                $breadcrumb = $sections->first()->title;
             }
 
             /* ------------------------------
@@ -104,7 +101,6 @@ class HomeController extends Controller
             $featuredCategories = Category::where('featured', true)
                 ->where('status', true)
                 ->with('image')
-                ->orderBy('sort_order')
                 ->orderBy('sort_order')
                 ->get();
 
@@ -124,6 +120,7 @@ class HomeController extends Controller
             return view('customer.home.index', compact(
                 'banners',
                 'sections',
+                'featuredProducts',
                 'testimonials',
                 'breadcrumb',
                 'featuredCategories',

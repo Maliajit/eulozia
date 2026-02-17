@@ -61,17 +61,56 @@
     <script>
         function slide(btn, direction) {
             const track = btn.parentElement.querySelector('.carousel-track');
+            updateCarousel(track, direction);
+        }
+
+        function updateCarousel(track, direction) {
             const slides = track.querySelectorAll('.carousel-slide');
             let current = parseInt(track.getAttribute('data-current')) || 0;
-
+            
             current += direction;
-
+            
             if (current >= slides.length) current = 0;
             if (current < 0) current = slides.length - 1;
-
+            
             track.style.transform = `translateX(-${current * 100}%)`;
             track.setAttribute('data-current', current);
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const carousels = document.querySelectorAll('.product-inline-carousel');
+            
+            carousels.forEach(carousel => {
+                const track = carousel.querySelector('.carousel-track');
+                let startX = 0;
+                let endX = 0;
+
+                carousel.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].clientX;
+                }, { passive: true });
+
+                carousel.addEventListener('touchmove', (e) => {
+                    endX = e.touches[0].clientX;
+                }, { passive: true });
+
+                carousel.addEventListener('touchend', () => {
+                    const threshold = 50;
+                    const diff = startX - endX;
+
+                    if (Math.abs(diff) > threshold) {
+                        if (diff > 0) {
+                            // Swipe left -> Next slide
+                            updateCarousel(track, 1);
+                        } else {
+                            // Swipe right -> Prev slide
+                            updateCarousel(track, -1);
+                        }
+                    }
+                    startX = 0;
+                    endX = 0;
+                });
+            });
+        });
     </script>
 </body>
 

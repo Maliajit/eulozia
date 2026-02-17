@@ -24,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
     {
         View::composer('customer.partials.header', function ($view) {
             $headerCategories = Category::where('status', 1)
+                ->where('show_in_nav', 1)
                 ->orderBy('sort_order', 'asc')
                 ->take(5)
                 ->get();

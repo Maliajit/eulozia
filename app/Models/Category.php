@@ -31,6 +31,8 @@ class Category extends Model
         'meta_keywords',
     ];
 
+    protected $appends = ['image_url'];
+
     protected $casts = [
         'status' => 'boolean',
         'featured' => 'boolean',
@@ -74,11 +76,11 @@ class Category extends Model
             'category_id',
             'attribute_id'
         )
-        ->withPivot(['is_required', 'is_filterable', 'sort_order'])
-        ->orderBy('category_attributes.sort_order');
+            ->withPivot(['is_required', 'is_filterable', 'sort_order'])
+            ->orderBy('category_attributes.sort_order');
     }
 
-   public function specGroups()
+    public function specGroups()
     {
         return $this->belongsToMany(
             SpecificationGroup::class,
@@ -86,13 +88,13 @@ class Category extends Model
             'category_id',
             'spec_group_id'
         )->withPivot('sort_order')
-         ->withTimestamps()
-         ->using(CategorySpecGroup::class)
-         ->orderBy('pivot_sort_order');
+            ->withTimestamps()
+            ->using(CategorySpecGroup::class)
+            ->orderBy('pivot_sort_order');
     }
 
     // Alias for compatibility
-     public function specificationGroups()
+    public function specificationGroups()
     {
         return $this->belongsToMany(
             SpecificationGroup::class,
@@ -100,8 +102,8 @@ class Category extends Model
             'category_id',      // FK on pivot pointing to Category
             'spec_group_id'     // FK on pivot pointing to SpecGroup
         )
-        ->withPivot('sort_order')
-        ->orderBy('category_spec_groups.sort_order');
+            ->withPivot('sort_order')
+            ->orderBy('category_spec_groups.sort_order');
     }
 
 
@@ -127,5 +129,22 @@ class Category extends Model
     {
         return $this->hasOne(SeoMetadata::class, 'entity_id')
             ->where('entity_type', self::class);
+    }
+
+    /**
+     * Accessors
+     */
+    public function getImageUrlAttribute(): ?string
+    {
+        // Use getRelationValue to avoid calling the relationship method or accessor if it exists
+        $image = $this->getRelationValue('image');
+
+        // If the relation is not loaded, we might want to load it or just return null to be safe in accessors
+        // But Usually we expect it to be eager loaded.
+        if (!$image && !$this->relationLoaded('image')) {
+            return null;
+        }
+
+        return $image ? $image->url : null;
     }
 }

@@ -35,12 +35,8 @@ class HomeSectionController extends Controller
     {
         $categories = Category::all();
         $styles = [
-            'style_1' => 'Style 1 (1 Big + 4 Small)',
-            'style_2' => 'Style 2 (Creative Masonry)',
-            'style_3' => 'Style 3 (Horizontal Scroll)',
-            'style_4' => 'Style 4 (Center Featured + Side Items)',
-            'style_5' => 'Style 5 (Diagonal Staggered)',
-            'style_6' => 'Style 6 (Circular/Hexagon Layout)',
+            'style_1' => 'Style 1 (Simple Grid)',
+            'style_2' => 'Style 2 (Carousel Cards)',
         ];
         return view('admin.crm.home-sections.create', compact('categories', 'styles'));
     }
@@ -66,14 +62,10 @@ class HomeSectionController extends Controller
     {
         $categories = Category::all();
         $styles = [
-            'style_1' => 'Style 1 (1 Big + 4 Small)',
-            'style_2' => 'Style 2 (Creative Masonry)',
-            'style_3' => 'Style 3 (Horizontal Scroll)',
-            'style_4' => 'Style 4 (Center Featured + Side Items)',
-            'style_5' => 'Style 5 (Diagonal Staggered)',
-            'style_6' => 'Style 6 (Circular/Hexagon Layout)',
+            'style_1' => 'Style 1 (Simple Grid)',
+            'style_2' => 'Style 2 (Carousel Cards)',
         ];
-        
+
         $selectedProducts = [];
         if ($section->type === 'custom_products' && !empty($section->product_ids)) {
             $selectedProducts = Product::whereIn('id', $section->product_ids)->get();

@@ -17,7 +17,7 @@ class OrderController extends Controller
 
         // Get all orders for the customer
         $orders = Order::where('customer_id', $customer->id)
-            ->with(['items'])
+            ->with(['items.variant.primaryImage.media', 'items.variant.images'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
@@ -55,7 +55,7 @@ class OrderController extends Controller
 
         // Get order with related data
         $order = Order::where('customer_id', $customer->id)
-            ->with(['items'])
+            ->with(['items.variant.primaryImage.media', 'items.variant.images'])
             ->findOrFail($id);
 
         // Get status history
@@ -132,7 +132,7 @@ class OrderController extends Controller
 
         $orders = Order::where('customer_id', $customer->id)
             ->where('status', $status)
-            ->with(['items'])
+            ->with(['items.variant.primaryImage.media', 'items.variant.images'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 

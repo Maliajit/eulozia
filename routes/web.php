@@ -120,12 +120,10 @@ Route::name('customer.')->group(function () {
         Route::get('/', [CustomerAccount::class, 'profile'])->name('index');
         Route::get('/profile', [CustomerAccount::class, 'profile'])->name('profile');
         Route::post('/profile', [CustomerAccount::class, 'updateProfile'])->name('profile.update');
+        Route::get('/filter/{status}', [CustomerAccount::class, 'profile'])->name('filter');
 
-        Route::get('/orders', [CustomerOrder::class, 'orders'])->name('orders');
         Route::get('/orders/{id}', [CustomerOrder::class, 'orderDetails'])->name('orders.details');
-        Route::get('/orders/{id}/invoice', [CustomerOrder::class, 'downloadInvoice'])->name('orders.download-invoice');
         Route::post('/orders/{id}/cancel', [CustomerOrder::class, 'cancelOrder'])->name('orders.cancel');
-        Route::get('/orders/filter/{status}', [CustomerOrder::class, 'filterOrders'])->name('orders.filter');
 
         Route::get('/addresses', [CustomerAccount::class, 'addresses'])->name('addresses');
         Route::post('/addresses', [CustomerAccount::class, 'storeAddress'])->name('addresses.store');

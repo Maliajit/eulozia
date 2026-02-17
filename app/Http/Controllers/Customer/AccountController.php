@@ -15,40 +15,44 @@ use Illuminate\Support\Facades\Validator;
 
 class AccountController extends Controller
 {
-    public function profile()
+    public function profile($status = null)
     {
         $customer = Auth::guard('customer')->user();
 
-        // Get recent orders (last 3)
+        // Get recent orders (last 3) for the dashboard overview
         $recentOrders = Order::where('customer_id', $customer->id)
             ->orderBy('created_at', 'desc')
             ->take(3)
-            ->get()
-            ->map(function($order) {
-                return [
-                    'id' => $order->id,
-                    'order_number' => $order->order_number,
-                    'status' => $order->status,
-                    'grand_total' => $order->grand_total,
-                    'created_at' => $order->created_at,
-                    'items_count' => $order->items->count()
-                ];
-            });
+            ->get();
+
+        // Get all-time statistics
+        $totalOrders = Order::where('customer_id', $customer->id)->count();
+        $totalSpent = Order::where('customer_id', $customer->id)
+            ->where('payment_status', 'paid')
+            ->sum('grand_total');
+
+        // Status Counts for filters
+        $statusCounts = [
+            'pending' => Order::where('customer_id', $customer->id)->where('status', 'pending')->count(),
+            'confirmed' => Order::where('customer_id', $customer->id)->where('status', 'confirmed')->count(),
+            'shipped' => Order::where('customer_id', $customer->id)->where('status', 'shipped')->count(),
+            'delivered' => Order::where('customer_id', $customer->id)->where('status', 'delivered')->count(),
+            'cancelled' => Order::where('customer_id', $customer->id)->where('status', 'cancelled')->count(),
+        ];
+
+        // Get orders with filtering and pagination for the "My Orders" tab
+        $query = Order::where('customer_id', $customer->id)
+            ->with(['items.variant.primaryImage.media', 'items.variant.images'])
+            ->orderBy('created_at', 'desc');
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $allOrders = $query->paginate(10);
 
         // Get wishlist count
         $wishlistCount = Wishlist::where('customer_id', $customer->id)->count();
-
-        // Get cart items count (from session or database)
-        $cartCount = 0; // You'll need to implement your cart logic
-
-        // Get orders count
-        $ordersCount = Order::where('customer_id', $customer->id)->count();
-
-        // Get all orders for the orders tab
-        $allOrders = Order::where('customer_id', $customer->id)
-            ->with(['items'])
-            ->orderBy('created_at', 'desc')
-            ->get();
 
         // Get addresses for the addresses tab
         $addresses = CustomerAddress::where('customer_id', $customer->id)
@@ -60,10 +64,12 @@ class AccountController extends Controller
             'customer',
             'recentOrders',
             'wishlistCount',
-            'cartCount',
-            'ordersCount',
+            'totalOrders',
+            'totalSpent',
+            'statusCounts',
             'allOrders',
-            'addresses'
+            'addresses',
+            'status'
         ));
     }
 

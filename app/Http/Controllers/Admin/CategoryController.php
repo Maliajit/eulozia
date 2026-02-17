@@ -18,7 +18,7 @@ class CategoryController extends Controller
 
     public function getData(Request $request)
     {
-        $query = Category::withCount('products')->with('parent');
+        $query = Category::withCount('products')->with('parent', 'image');
 
         if ($request->filled('sort')) {
             $query->orderBy($request->sort, $request->direction ?? 'asc');
@@ -27,8 +27,8 @@ class CategoryController extends Controller
         }
 
         if ($request->filled('search')) { // Filter by name/slug/description if searching
-             $search = $request->search;
-             // Tabulator might send filters as array, or we can handle simple search
+            $search = $request->search;
+            // Tabulator might send filters as array, or we can handle simple search
         }
 
         $perPage = $request->per_page ?? 10;
@@ -54,7 +54,7 @@ class CategoryController extends Controller
             'sort_order' => 'integer|min:0',
             'status' => 'boolean',
             'image_id' => 'nullable|integer', // Assuming media library returns ID
-             // Add other fields validation
+            // Add other fields validation
         ]);
 
         $category = Category::create($request->all());
@@ -69,10 +69,10 @@ class CategoryController extends Controller
 
     public function show($id)
     {
-        $category = Category::with('children', 'parent')->findOrFail($id);
-        
+        $category = Category::with('children', 'parent', 'image')->findOrFail($id);
+
         if (request()->wantsJson()) {
-             return response()->json(['success' => true, 'data' => $category]);
+            return response()->json(['success' => true, 'data' => $category]);
         }
         return view('admin.categories.show', ['id' => $id, 'category' => $category]);
     }
@@ -80,14 +80,14 @@ class CategoryController extends Controller
     public function update(Request $request, $id)
     {
         $category = Category::findOrFail($id);
-        
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:categories,slug,' . $id,
             'parent_id' => 'nullable|exists:categories,id',
             'sort_order' => 'integer|min:0',
             'status' => 'boolean',
-             // Add other fields validation
+            // Add other fields validation
         ]);
 
         $category->update($request->all());

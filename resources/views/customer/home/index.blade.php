@@ -54,36 +54,40 @@
             @endif
         </section>
 
-        <!-- Featured Collection Section -->
-        <div class="container mx-auto mt-16">
-            @if($sections && $sections->count() > 0)
-                @php
-                    $featuredSection = $sections->firstWhere('title', 'Featured Collection');
-                @endphp
-                @if($featuredSection)
-                    <div class="mb-20">
-                        <h2 class="text-3xl font-bold text-center mb-12">{{ $featuredSection->title }}</h2>
-                        @if($featuredSection->subtitle)
-                            <p class="text-center text-gray-500 -mt-10 mb-12">{{ $featuredSection->subtitle }}</p>
-                        @endif
+        @php
+            $featuredSection = (isset($sections) && $sections->count() > 0) ? $sections->firstWhere('title', 'Featured Collection') : null;
+        @endphp
 
-                        @if($featuredSection->products && count($featuredSection->products) > 0)
-                            <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 px-6">
-                                @foreach ($featuredSection->products as $product)
+        <!-- Featured Collection Section -->
+        @if($featuredSection)
+            <div class="container mx-auto mt-16 {{ $featuredSection->style == 'style_1' ? 'bg-primary text-secondary' : '' }}">
+                <div class="mb-20">
+                    <h1 class="text-4xl font-bold text-center mb-12">{{ $featuredSection->title }}</h1>
+                    @if($featuredSection->subtitle)
+                        <p class="text-center text-gray-500 -mt-10 mb-12">{{ $featuredSection->subtitle }}</p>
+                    @endif
+
+                    @if($featuredSection->products && count($featuredSection->products) > 0)
+                        <div
+                            class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 {{ $featuredSection->style == 'style_1' ? 'gap-6' : '' }}">
+                            @foreach ($featuredSection->products as $product)
+                                @if($featuredSection->style == 'style_1')
+                                @include('customer.partials.section-style-1', ['product' => $product])@elseif($featuredSection->style == 'style_2')
+                                @include('customer.partials.section-style-2', ['product' => $product])@else
                                     @include('customer.partials.product-card', ['product' => $product])
-                                @endforeach
-                            </div>
-                        @else
-                            <div class="text-center text-gray-500 py-10">No products found in this section.</div>
-                        @endif
-                    </div>
-                @endif
-            @endif
-        </div>
+                                @endif
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center text-gray-500 py-10">No products found in this section.</div>
+                    @endif
+                </div>
+            </div>
+        @endif
 
         <!-- Shop by Collection Section -->
         @if(isset($featuredCategories) && $featuredCategories->count() > 0)
-            <section class="py-16 bg-gray-50">
+            <section class="py-16">
                 <div class="container mx-auto px-6">
                     <h2 class="text-3xl font-bold text-center mb-12">Shop by Collection</h2>
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
@@ -102,8 +106,9 @@
                                         </div>
                                     @endif
                                 </div>
-                                <p class="mt-4 font-medium text-gray-800 group-hover:text-primary transition-colors">
-                                    {{ $category->name }}</p>
+                                <p class="mt-4 font-medium transition-colors">
+                                    {{ $category->name }}
+                                </p>
                             </a>
                         @endforeach
                     </div>
@@ -115,8 +120,7 @@
         @if(isset($exploreMoreCategories) && $exploreMoreCategories->count() > 0)
             <section class="py-16">
                 <div class="container mx-auto px-6 mb-10">
-                    <h2 class="text-3xl font-bold text-center mb-4">Explore More Collections</h2>
-                    <p class="text-center text-gray-500 mb-12">Discover our extensive range of fashion.</p>
+                    <h2 class="text-3xl font-bold text-center mb-12">Explore More Collections</h2>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 w-full h-[600px]">
@@ -137,7 +141,8 @@
                                 <div class="text-center">
                                     <h3
                                         class="text-4xl font-bold text-white mb-4 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                                        {{ $category->name }}</h3>
+                                        {{ $category->name }}
+                                    </h3>
                                     <a href="{{ route('customer.products.index', ['category' => $category->slug]) }}"
                                         class="inline-block px-6 py-2 border-2 border-white text-white font-medium hover:bg-white hover:text-black transition-all duration-300 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 delay-100">
                                         View Collection
@@ -148,6 +153,37 @@
                     @endforeach
                 </div>
             </section>
+        @endif
+
+        <!-- Dynamic Home Sections loop -->
+        @if(isset($sections) && $sections->count() > 1)
+            @foreach($sections->where('title', '!=', 'Featured Collection') as $section)
+                <section class="py-16 {{ $section->style == 'style_1' ? 'bg-primary text-secondary' : '' }}">
+                    <div class="container mx-auto px-6 text-secondary">
+                        <h2 class="text-3xl font-bold text-center mb-12">{{ $section->title }}</h2>
+                        @if($section->subtitle)
+                            <p class="text-center text-gray-500 -mt-10 mb-12">{{ $section->subtitle }}</p>
+                        @endif
+
+                        @if($section->products && count($section->products) > 0)
+                            <div
+                                class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 {{ $section->style == 'style_1' ? 'gap-6' : '' }}">
+                                @foreach ($section->products as $product)
+                                    @if($section->style == 'style_1')
+                                        @include('customer.partials.section-style-1', ['product' => $product])
+                                    @elseif($section->style == 'style_2')
+                                        @include('customer.partials.section-style-2', ['product' => $product])
+                                    @else
+                                        @include('customer.partials.product-card', ['product' => $product])
+                                    @endif
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="text-center text-gray-500 py-10">No products found in this section.</div>
+                        @endif
+                    </div>
+                </section>
+            @endforeach
         @endif
 
         <!-- End of Main Content -->

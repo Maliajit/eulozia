@@ -35,8 +35,8 @@
                         <i class="fas fa-shopping-bag mr-3"></i>
                         My Orders
                     </div>
-                    @if($ordersCount > 0)
-                        <span class="notification bg-white text-black text-xs px-2 py-1 rounded-full">{{ $ordersCount }}</span>
+                    @if($totalOrders > 0)
+                        <span class="notification bg-white text-black text-xs px-2 py-1 rounded-full">{{ $totalOrders }}</span>
                     @endif
                 </button>
                 <button data-tab="addresses"
@@ -57,26 +57,15 @@
 
         <!-- Main Content -->
         <main class="account-content bg-black rounded-lg border border-gray-800 p-6 lg:col-span-3">
-            <!-- Dashboard Tab -->
-            <div class="tab-pane active" id="dashboard">
+            <div class="tab-pane {{ $status ? '' : 'active' }}" id="dashboard">
                 <div class="content-header mb-8">
                     <h1 class="text-3xl font-bold text-white mb-2">Dashboard</h1>
                     <p class="text-gray-300">Welcome back, {{ explode(' ', $customer->name)[0] }}! Here's your overview.</p>
                 </div>
 
                 @if(session('success'))
-                    <div class="bg-green-500/10 border border-green-500 text-green-500 px-4 py-3 rounded-lg mb-6">
+                    <div class="bg-green-500/10 border border-green-500 text-green-500 px-4 py-3 rounded-lg mb-6 text-sm">
                         {{ session('success') }}
-                    </div>
-                @endif
-
-                @if($errors->any())
-                    <div class="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-lg mb-6">
-                        <ul class="list-disc list-inside">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
                     </div>
                 @endif
 
@@ -86,7 +75,7 @@
                             <i class="fas fa-shopping-bag text-white text-xl"></i>
                         </div>
                         <div class="stat-info">
-                            <h3 class="text-2xl font-bold text-white">{{ $ordersCount }}</h3>
+                            <h3 class="text-2xl font-bold text-white">{{ $totalOrders }}</h3>
                             <p class="text-gray-300">Total Orders</p>
                         </div>
                     </div>
@@ -103,11 +92,11 @@
 
                     <div class="stat-card bg-gray-900 border border-gray-800 rounded-lg p-6 flex items-center">
                         <div class="stat-icon cart w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mr-4">
-                            <i class="fas fa-shopping-cart text-white text-xl"></i>
+                            <i class="fas fa-wallet text-white text-xl"></i>
                         </div>
                         <div class="stat-info">
-                            <h3 class="text-2xl font-bold text-white">{{ $cartCount }}</h3>
-                            <p class="text-gray-300">In Cart</p>
+                            <h3 class="text-2xl font-bold text-white">₹{{ number_format($totalSpent, 2) }}</h3>
+                            <p class="text-gray-300">Total Spent</p>
                         </div>
                     </div>
                 </div>
@@ -116,7 +105,7 @@
                 <div class="content-section mb-8">
                     <div class="section-header flex justify-between items-center mb-6">
                         <h2 class="text-2xl font-bold text-white">Recent Orders</h2>
-                        @if($ordersCount > 0)
+                        @if($totalOrders > 0)
                             <button onclick="document.querySelector('[data-tab=orders]').click()" class="view-all text-white hover:text-gray-300 font-semibold">View All</button>
                         @endif
                     </div>
@@ -126,23 +115,23 @@
                             @foreach($recentOrders as $order)
                                 <div class="order-card bg-gray-900 border border-gray-800 rounded-lg p-4 flex flex-wrap items-center justify-between gap-4">
                                     <div class="order-info">
-                                        <h4 class="text-white font-semibold">Order #{{ $order['order_number'] }}</h4>
-                                        <p class="text-sm text-gray-400">{{ $order['created_at']->format('M d, Y') }}</p>
+                                        <h4 class="text-white font-semibold">Order #{{ $order->order_number }}</h4>
+                                        <p class="text-sm text-gray-400">{{ $order->created_at->format('M d, Y') }}</p>
                                     </div>
                                     <div class="order-status">
                                         <span class="px-3 py-1 rounded-full text-xs font-semibold
-                                            {{ $order['status'] == 'delivered' ? 'bg-green-500/10 text-green-500' : 
-                                               ($order['status'] == 'pending' ? 'bg-yellow-500/10 text-yellow-500' : 
-                                               ($order['status'] == 'cancelled' ? 'bg-red-500/10 text-red-500' : 'bg-blue-500/10 text-blue-500')) }}">
-                                            {{ ucfirst($order['status']) }}
+                                            {{ $order->status == 'delivered' ? 'bg-green-500/10 text-green-500' : 
+                                               ($order->status == 'pending' ? 'bg-yellow-500/10 text-yellow-500' : 
+                                               ($order->status == 'cancelled' ? 'bg-red-500/10 text-red-500' : 'bg-blue-500/10 text-blue-500')) }}">
+                                            {{ ucfirst($order->status) }}
                                         </span>
                                     </div>
                                     <div class="order-total">
-                                        <p class="text-white font-bold">₹{{ number_format($order['grand_total'], 2) }}</p>
-                                        <p class="text-xs text-gray-400">{{ $order['items_count'] }} items</p>
+                                        <p class="text-white font-bold">₹{{ number_format($order->grand_total, 2) }}</p>
+                                        <p class="text-xs text-gray-400">{{ $order->items->count() }} items</p>
                                     </div>
                                     <div class="order-actions">
-                                        <a href="{{ route('customer.account.orders.details', $order['id']) }}" class="text-accent hover:text-white text-sm font-medium transition-colors">View Details</a>
+                                        <a href="{{ route('customer.account.orders.details', $order->id) }}" class="text-accent hover:text-white text-sm font-medium transition-colors">View Details</a>
                                     </div>
                                 </div>
                             @endforeach
@@ -198,22 +187,38 @@
                 </div>
             </div>
             
-            <div class="tab-pane hidden" id="orders">
+            <div class="tab-pane {{ $status ? 'active' : 'hidden' }}" id="orders">
                 <div class="content-header mb-8">
                     <h1 class="text-3xl font-bold text-white mb-2">My Orders</h1>
                     <p class="text-gray-300">View and track all your orders.</p>
                 </div>
 
+                <!-- Status Filters -->
+                <div class="flex flex-wrap gap-2 mb-8 order-filters">
+                    <a href="{{ route('customer.account.index') }}#orders"
+                        class="px-4 py-2 rounded-full text-xs md:text-sm font-semibold transition-all duration-300 {{ !$status ? 'bg-white text-black' : 'bg-gray-900 text-gray-400 hover:text-white border border-gray-800' }}">
+                        All
+                    </a>
+                    @foreach($statusCounts as $statusName => $count)
+                        @if($count > 0 || $status == $statusName)
+                            <a href="{{ route('customer.account.filter', $statusName) }}#orders"
+                                class="px-4 py-2 rounded-full text-xs md:text-sm font-semibold transition-all duration-300 {{ $status == $statusName ? 'bg-white text-black' : 'bg-gray-900 text-gray-400 hover:text-white border border-gray-800' }}">
+                                {{ ucfirst($statusName) }} ({{ $count }})
+                            </a>
+                        @endif
+                    @endforeach
+                </div>
+
                 @if($allOrders->count() > 0)
-                    <div class="orders-list space-y-4">
+                    <div class="space-y-4">
                         @foreach($allOrders as $order)
                             <div class="order-card bg-gray-900 border border-gray-800 rounded-lg p-4 flex flex-wrap items-center justify-between gap-4">
                                 <div class="order-info">
-                                    <h4 class="text-white font-semibold">Order #{{ $order->order_number }}</h4>
-                                    <p class="text-sm text-gray-400">{{ $order->created_at->format('M d, Y') }}</p>
+                                    <h4 class="text-white font-semibold text-sm md:text-base">Order #{{ $order->order_number }}</h4>
+                                    <p class="text-[10px] md:text-xs text-gray-400">{{ $order->created_at->format('M d, Y') }}</p>
                                 </div>
                                 <div class="order-status">
-                                    <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                    <span class="px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-semibold
                                         {{ $order->status == 'delivered' ? 'bg-green-500/10 text-green-500' : 
                                            ($order->status == 'pending' ? 'bg-yellow-500/10 text-yellow-500' : 
                                            ($order->status == 'cancelled' ? 'bg-red-500/10 text-red-500' : 'bg-blue-500/10 text-blue-500')) }}">
@@ -221,21 +226,31 @@
                                     </span>
                                 </div>
                                 <div class="order-total">
-                                    <p class="text-white font-bold">₹{{ number_format($order->grand_total, 2) }}</p>
-                                    <p class="text-xs text-gray-400">{{ $order->items->count() }} items</p>
+                                    <p class="text-white font-bold text-sm md:text-base">₹{{ number_format($order->grand_total, 2) }}</p>
+                                    <p class="text-[10px] md:text-xs text-gray-400">{{ $order->items->count() }} items</p>
                                 </div>
                                 <div class="order-actions">
-                                    <a href="{{ route('customer.account.orders.details', $order->id) }}" class="text-accent hover:text-white text-sm font-medium transition-colors">View Details</a>
+                                    <a href="{{ route('customer.account.orders.details', $order->id) }}" 
+                                       class="text-accent hover:text-white text-xs md:text-sm font-medium transition-colors">
+                                        View Details
+                                    </a>
                                 </div>
                             </div>
                         @endforeach
+                        
+                        <div class="mt-8 pagination-container">
+                            {{ $allOrders->fragment('orders')->links() }}
+                        </div>
                     </div>
                 @else
-                    <div class="bg-gray-900 border border-gray-800 rounded-lg p-8 text-center">
-                        <i class="fas fa-shopping-bag text-gray-400 text-4xl mb-4"></i>
-                        <h3 class="text-white font-semibold mb-2">No orders found</h3>
-                        <p class="text-gray-400 mb-6">You haven't placed any orders yet.</p>
-                        <a href="{{ route('customer.products.index') }}" class="inline-block bg-accent text-primary px-6 py-2 rounded-lg font-bold hover:bg-white transition-colors">
+                    <div class="bg-gray-900 border border-gray-800 rounded-lg p-8 md:p-12 text-center">
+                        <div class="w-16 h-16 md:w-20 md:h-20 bg-black border border-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-shopping-bag text-gray-500 text-2xl md:text-3xl"></i>
+                        </div>
+                        <h3 class="text-xl md:text-2xl font-bold text-white mb-2">No orders found</h3>
+                        <p class="text-gray-500 mb-8 max-w-md mx-auto text-sm md:text-base">You haven't placed any orders matching this filter yet.</p>
+                        <a href="{{ route('customer.products.index') }}"
+                            class="bg-white text-black px-8 py-3 rounded-lg font-bold hover:bg-gray-200 transition-colors inline-block text-sm">
                             Start Shopping
                         </a>
                     </div>
@@ -292,25 +307,46 @@
         const tabBtns = document.querySelectorAll('.tab-btn');
         const tabPanes = document.querySelectorAll('.tab-pane');
 
+        function activateTab(target) {
+            const btn = document.querySelector(`[data-tab="${target}"]`);
+            if (!btn) return;
+
+            // Update buttons
+            tabBtns.forEach(b => {
+                b.classList.remove('bg-white', 'text-black');
+                b.classList.add('text-white', 'hover:bg-gray-800');
+            });
+            btn.classList.add('bg-white', 'text-black');
+            btn.classList.remove('text-white', 'hover:bg-gray-800');
+
+            // Update panes
+            tabPanes.forEach(pane => {
+                pane.classList.add('hidden');
+                pane.classList.remove('active');
+            });
+            const targetPane = document.getElementById(target);
+            if (targetPane) {
+                targetPane.classList.remove('hidden');
+                targetPane.classList.add('active');
+            }
+        }
+
         tabBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 const target = btn.getAttribute('data-tab');
-
-                // Update buttons
-                tabBtns.forEach(b => {
-                    b.classList.remove('bg-white', 'text-black');
-                    b.classList.add('text-white', 'hover:bg-gray-800');
-                });
-                btn.classList.add('bg-white', 'text-black');
-                btn.classList.remove('text-white', 'hover:bg-gray-800');
-
-                // Update panes
-                tabPanes.forEach(pane => {
-                    pane.classList.add('hidden');
-                });
-                document.getElementById(target).classList.remove('hidden');
+                activateTab(target);
+                // Update hash without scrolling
+                history.pushState(null, null, `#${target}`);
             });
         });
+
+        // Check hash on load
+        const hash = window.location.hash.substring(1);
+        if (hash) {
+            activateTab(hash);
+        } else if (document.querySelector('.tab-pane.active')) {
+            // Already handled by server-side class injection
+        }
     });
 
     function confirmLogout() {

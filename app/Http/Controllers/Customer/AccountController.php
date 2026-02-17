@@ -148,7 +148,7 @@ class AccountController extends Controller
             'is_default' => $request->is_default ?? 0,
         ]);
 
-        return redirect()->route('customer.account.addresses')
+        return redirect()->to(route('customer.account.index') . '#addresses')
             ->with('success', 'Address added successfully!');
     }
 
@@ -194,7 +194,7 @@ class AccountController extends Controller
             'is_default' => $request->is_default ?? $address->is_default,
         ]);
 
-        return redirect()->route('customer.account.addresses')
+        return redirect()->to(route('customer.account.index') . '#addresses')
             ->with('success', 'Address updated successfully!');
     }
 
@@ -206,13 +206,13 @@ class AccountController extends Controller
             ->firstOrFail();
 
         if ($address->is_default) {
-            return redirect()->route('customer.account.addresses')
+            return redirect()->to(route('customer.account.index') . '#addresses')
                 ->with('error', 'Cannot delete default address. Set another address as default first.');
         }
 
         $address->delete();
 
-        return redirect()->route('customer.account.addresses')
+        return redirect()->to(route('customer.account.index') . '#addresses')
             ->with('success', 'Address deleted successfully!');
     }
 
@@ -229,7 +229,7 @@ class AccountController extends Controller
 
         $address->update(['is_default' => 1]);
 
-        return redirect()->route('customer.account.addresses')
+        return redirect()->to(route('customer.account.index') . '#addresses')
             ->with('success', 'Default address updated successfully!');
     }
 

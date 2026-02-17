@@ -125,7 +125,7 @@ Route::name('customer.')->group(function () {
         Route::get('/orders/{id}', [CustomerOrder::class, 'orderDetails'])->name('orders.details');
         Route::post('/orders/{id}/cancel', [CustomerOrder::class, 'cancelOrder'])->name('orders.cancel');
 
-        Route::get('/addresses', [CustomerAccount::class, 'addresses'])->name('addresses');
+        //        Route::get('/addresses', [CustomerAccount::class, 'addresses'])->name('addresses');
         Route::post('/addresses', [CustomerAccount::class, 'storeAddress'])->name('addresses.store');
         Route::put('/addresses/{id}', [CustomerAccount::class, 'updateAddress'])->name('addresses.update');
         Route::delete('/addresses/{id}', [CustomerAccount::class, 'deleteAddress'])->name('addresses.delete');

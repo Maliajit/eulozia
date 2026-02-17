@@ -314,46 +314,51 @@
                     <p class="text-accent">Please select required options before proceeding</p>
                 </div>
 
-                <!-- Size Options -->
-                <div class="grid grid-cols-3 gap-3 mb-6">
+                <!-- Attribute Groups with Titles -->
+                <div class="space-y-6 mb-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
                     @if(isset($product['attribute_groups']) && count($product['attribute_groups']) > 0)
                         @foreach($product['attribute_groups'] as $attributeName => $attributeGroup)
-                            @foreach ($attributeGroup['options'] as $option)
-                                <label class="inline-flex items-center cursor-pointer group" title="{{ $option['label'] }}">
-                                    <input type="radio" name="modal-attribute-{{ $attributeName }}" value="{{ $option['value'] }}"
-                                        class="hidden peer">
-                                    @if(isset($attributeGroup['type']) && $attributeGroup['type'] === 'color')
-                                        @php
-                                            $colorCode = $option['color_code'] ?? '';
-                                            if (empty($colorCode) && isset($option['label']) && (Str::startsWith($option['label'], '#') || preg_match('/^[a-fA-F0-9]{3,6}$/', $option['label']))) {
-                                                $colorCode = $option['label'];
-                                            }
-                                            if (empty($colorCode))
-                                                $colorCode = '#ccc';
-                                            if (!Str::startsWith($colorCode, '#') && !Str::startsWith($colorCode, 'rgb') && !Str::startsWith($colorCode, 'hsl')) {
-                                                $colorCode = '#' . $colorCode;
-                                            }
-                                            $hexVal = strtoupper(str_replace('#', '', $colorCode));
-                                            $isWhite = in_array($hexVal, ['FFFFFF', 'FFF', 'F9F9F9', 'F3F4F6', 'EEEEEE', 'E5E7EB']);
-                                            $isBlack = in_array($hexVal, ['000000', '000', '111111', '1F2937']);
-                                        @endphp
-                                        <span
-                                            class="w-12 h-12 rounded-full border-2 {{ $isWhite ? 'border-gray-300' : ($isBlack ? 'border-gray-700' : 'border-transparent') }} peer-checked:border-accent group-hover:scale-110 transition-all shadow-sm flex items-center justify-center relative"
-                                            style="background-color: {{ $colorCode }};">
-                                            <svg class="w-6 h-6 {{ $isWhite ? 'text-gray-900' : 'text-white' }} opacity-0 peer-checked:opacity-100 transition-opacity"
-                                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7">
-                                                </path>
-                                            </svg>
-                                        </span>
-                                    @else
-                                        <span
-                                            class="w-full px-4 py-3 border border-accent text-accent rounded-md transition-all duration-300 peer-checked:bg-accent peer-checked:text-primary peer-checked:border-accent text-center">
-                                            {{ $option['label'] }}
-                                        </span>
-                                    @endif
-                                </label>
-                            @endforeach
+                            <div class="attribute-selection-block">
+                                <h4 class="text-secondary font-semibold mb-3">{{ $attributeName }}</h4>
+                                <div class="grid grid-cols-3 gap-3">
+                                    @foreach ($attributeGroup['options'] as $option)
+                                        <label class="inline-flex items-center cursor-pointer group" title="{{ $option['label'] }}">
+                                            <input type="radio" name="modal-attribute-{{ $attributeName }}" value="{{ $option['value'] }}"
+                                                class="hidden peer">
+                                            @if(isset($attributeGroup['type']) && $attributeGroup['type'] === 'color')
+                                                @php
+                                                    $colorCode = $option['color_code'] ?? '';
+                                                    if (empty($colorCode) && isset($option['label']) && (Str::startsWith($option['label'], '#') || preg_match('/^[a-fA-F0-9]{3,6}$/', $option['label']))) {
+                                                        $colorCode = $option['label'];
+                                                    }
+                                                    if (empty($colorCode))
+                                                        $colorCode = '#ccc';
+                                                    if (!Str::startsWith($colorCode, '#') && !Str::startsWith($colorCode, 'rgb') && !Str::startsWith($colorCode, 'hsl')) {
+                                                        $colorCode = '#' . $colorCode;
+                                                    }
+                                                    $hexVal = strtoupper(str_replace('#', '', $colorCode));
+                                                    $isWhite = in_array($hexVal, ['FFFFFF', 'FFF', 'F9F9F9', 'F3F4F6', 'EEEEEE', 'E5E7EB']);
+                                                    $isBlack = in_array($hexVal, ['000000', '000', '111111', '1F2937']);
+                                                @endphp
+                                                <span
+                                                    class="w-12 h-12 rounded-full border-2 {{ $isWhite ? 'border-gray-300' : ($isBlack ? 'border-gray-700' : 'border-transparent') }} peer-checked:border-accent group-hover:scale-110 transition-all shadow-sm flex items-center justify-center relative"
+                                                    style="background-color: {{ $colorCode }};">
+                                                    <svg class="w-6 h-6 {{ $isWhite ? 'text-gray-900' : 'text-white' }} opacity-0 peer-checked:opacity-100 transition-opacity"
+                                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7">
+                                                        </path>
+                                                    </svg>
+                                                </span>
+                                            @else
+                                                <span
+                                                    class="w-full px-2 py-3 border border-accent text-accent rounded-md transition-all duration-300 peer-checked:bg-accent peer-checked:text-primary peer-checked:border-accent text-center text-sm font-medium">
+                                                    {{ $option['label'] }}
+                                                </span>
+                                            @endif
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
                         @endforeach
                     @endif
                 </div>

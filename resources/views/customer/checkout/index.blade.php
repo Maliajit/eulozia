@@ -98,6 +98,38 @@
                                 </svg>
                                 Shipping Address
                             </h2>
+
+                            @if(isset($addresses) && $addresses->count() > 0)
+                            <!-- Saved Addresses Selection -->
+                            <div class="mb-8 overflow-x-auto">
+                                <p class="text-sm font-medium text-gray-400 mb-4">Select from your saved addresses:</p>
+                                <div class="flex space-x-4 pb-4 min-w-max">
+                                    @foreach($addresses as $address)
+                                    <div class="address-card cursor-pointer p-4 bg-gray-900 border-2 {{ $address->is_default ? 'border-accent' : 'border-gray-700' }} rounded-lg hover:border-accent transition-all w-64 group relative"
+                                        data-address='@json($address)'>
+                                        @if($address->is_default)
+                                            <span class="absolute top-2 right-2 bg-accent text-primary text-[10px] font-bold px-1.5 py-0.5 rounded uppercase">Default</span>
+                                        @endif
+                                        <div class="flex items-start mb-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                            </svg>
+                                            <h3 class="font-bold text-secondary truncate">{{ $address->name }}</h3>
+                                        </div>
+                                        <p class="text-xs text-gray-400 line-clamp-2 mb-1">{{ $address->address }}</p>
+                                        <p class="text-xs text-gray-400">{{ $address->city }}, {{ $address->state }} - {{ $address->pincode }}</p>
+                                        <p class="text-xs text-gray-400 mt-2">{{ $address->mobile }}</p>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            <div class="relative flex py-4 items-center">
+                                <div class="flex-grow border-t border-gray-800"></div>
+                                <span class="flex-shrink mx-4 text-gray-500 text-xs uppercase tracking-widest">Or enter new address</span>
+                                <div class="flex-grow border-t border-gray-800"></div>
+                            </div>
+                            @endif
+
                             <div class="space-y-4">
                                 <div>
                                     <label class="block text-sm font-medium text-secondary mb-2">Address Line 1 *</label>
@@ -303,6 +335,45 @@
             if (pincode.length === 6) {
                 checkShipping(pincode);
             }
+        });
+
+        // Handle Saved Address Selection
+        const addressCards = document.querySelectorAll('.address-card');
+        addressCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const addressData = JSON.parse(this.dataset.address);
+                
+                // Update UI selection state
+                addressCards.forEach(c => c.classList.remove('border-accent'));
+                addressCards.forEach(c => c.classList.add('border-gray-700'));
+                this.classList.remove('border-gray-700');
+                this.classList.add('border-accent');
+
+                // Split name (simple split for first/last)
+                const names = addressData.name.split(' ');
+                form.querySelector('[name="firstName"]').value = names[0] || '';
+                form.querySelector('[name="lastName"]').value = names.slice(1).join(' ') || '';
+                
+                // Fill other fields
+                form.querySelector('[name="email"]').value = '{{ Auth::guard("customer")->user()->email ?? "" }}';
+                form.querySelector('[name="phone"]').value = addressData.mobile || '';
+                form.querySelector('[name="address1"]').value = addressData.address || '';
+                form.querySelector('[name="city"]').value = addressData.city || '';
+                form.querySelector('[name="pincode"]').value = addressData.pincode || '';
+                
+                const stateSelect = form.querySelector('[name="state"]');
+                if (stateSelect) {
+                    const option = Array.from(stateSelect.options).find(opt => opt.value.toLowerCase() === addressData.state.toLowerCase());
+                    if (option) stateSelect.value = option.value;
+                }
+
+                // Trigger shipping check
+                if (addressData.pincode && addressData.pincode.length === 6) {
+                    checkShipping(addressData.pincode);
+                }
+                
+                saveFormData();
+            });
         });
 
         if (pincodeInput.value.length === 6) {

@@ -103,6 +103,52 @@ class CheckoutService
     }
 
     /**
+     * Finalize an order after successful payment
+     */
+    public function finalizeOrder(Order $order)
+    {
+        // Check if already finalized to avoid duplicate actions
+        if ($order->status !== 'pending' && $order->payment_status === 'paid') {
+            Log::info('Order already finalized, skipping', ['order_id' => $order->id]);
+            return;
+        }
+
+        Log::info('Finalizing order', ['order_id' => $order->id]);
+
+        // Clear cart (only if this belongs to the current logged-in customer)
+        if ($this->customer && $this->customer->id === $order->customer_id) {
+            $this->cartHelper->clearCart();
+        }
+
+        // INCREMENT COUPON USAGE
+        if ($order->offer_id) {
+            try {
+                $offer = Offer::find($order->offer_id);
+                if ($offer) {
+                    $offer->incrementUsage($order->customer_id, $order->id, $order->discount_total);
+                }
+            } catch (\Exception $e) {
+                Log::error('Failed to increment coupon usage on finalization', ['error' => $e->getMessage()]);
+            }
+        }
+
+        // SAVE ADDRESS FOR FUTURE USE
+        $this->saveAddressToProfile($order->shipping_address);
+
+        // SEND ORDER CONFIRMATION EMAIL
+        try {
+            $recipient = $order->shipping_address['email'] ?? ($order->customer->email ?? null);
+            if ($recipient) {
+                Mail::to($recipient)->send(new OrderConfirmed($order->load('items')));
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to send order confirmation email on finalization', ['error' => $e->getMessage()]);
+        }
+
+        Log::info('Order finalized successfully', ['order_id' => $order->id]);
+    }
+
+    /**
      * Save shipping address to customer profile
      */
     private function saveAddressToProfile(array $data): void
@@ -111,13 +157,13 @@ class CheckoutService
             $addressData = [
                 'customer_id' => $this->customer->id,
                 'type' => 'shipping',
-                'name' => $data['full_name'],
-                'mobile' => $data['phone'],
-                'address' => $data['address'] . (isset($data['address2']) ? ', ' . $data['address2'] : ''),
-                'city' => $data['city'],
-                'state' => $data['state'],
-                'country' => 'India', // Default for now
-                'pincode' => $data['pincode'],
+                'name' => $data['name'] ?? $data['full_name'] ?? (($data['firstName'] ?? '') . ' ' . ($data['lastName'] ?? '')),
+                'mobile' => $data['phone'] ?? $data['mobile'] ?? null,
+                'address' => ($data['address'] ?? $data['address1'] ?? '') . (isset($data['address2']) ? ', ' . $data['address2'] : ''),
+                'city' => $data['city'] ?? null,
+                'state' => $data['state'] ?? null,
+                'country' => $data['country'] ?? 'India',
+                'pincode' => $data['pincode'] ?? null,
                 'is_default' => !CustomerAddress::where('customer_id', $this->customer->id)->exists()
             ];
 
@@ -139,7 +185,7 @@ class CheckoutService
     /**
      * Validate cart and stock availability
      */
-    private function validateCart(): void
+    public function validateCart(): void
     {
         if (empty($this->cart['items'])) {
             Log::error('Cart validation failed: Cart is empty');
@@ -189,7 +235,7 @@ class CheckoutService
     /**
      * Create order record
      */
-    private function createOrder(array $checkoutData): Order
+    public function createOrder(array $checkoutData): Order
     {
         try {
             $orderData = [
@@ -233,7 +279,7 @@ class CheckoutService
     /**
      * Create order items
      */
-    private function createOrderItems(Order $order): void
+    public function createOrderItems(Order $order): void
     {
         try {
             foreach ($this->cart['items'] as $item) {
@@ -280,7 +326,7 @@ class CheckoutService
     /**
      * Update stock quantities
      */
-    private function updateStock(Order $order): void
+    public function updateStock(Order $order): void
     {
         try {
             foreach ($order->items as $item) {
@@ -340,10 +386,9 @@ class CheckoutService
                     'order_id' => $order->id,
                     'payment_method' => 'cod',
                     'amount' => $order->grand_total,
-                    'currency' => 'INR',
                     'status' => 'pending',
                     'transaction_id' => 'COD_' . Str::random(16),
-                    'payment_details' => ['method' => 'cash_on_delivery'],
+                    'response_data' => ['method' => 'cash_on_delivery'],
                 ]);
 
                 $order->update(['payment_status' => 'pending']);
@@ -393,7 +438,7 @@ class CheckoutService
                 'name' => $checkoutData[$prefix . 'name'] ?? $checkoutData['full_name'] ?? ($checkoutData['firstName'] . ' ' . $checkoutData['lastName']),
                 'email' => $checkoutData[$prefix . 'email'] ?? $checkoutData['email'],
                 'phone' => $checkoutData[$prefix . 'phone'] ?? $checkoutData['phone'],
-                'address' => $checkoutData[$prefix . 'address'] ?? $checkoutData['address'],
+                'address' => $checkoutData[$prefix . 'address'] ?? $checkoutData['address'] ?? $checkoutData['address1'] ?? null,
                 'address2' => $checkoutData[$prefix . 'address2'] ?? $checkoutData['address2'] ?? null,
                 'city' => $checkoutData[$prefix . 'city'] ?? $checkoutData['city'],
                 'state' => $checkoutData[$prefix . 'state'] ?? $checkoutData['state'],

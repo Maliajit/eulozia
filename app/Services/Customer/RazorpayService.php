@@ -52,6 +52,12 @@ class RazorpayService
                 'amount' => $amount
             ]);
 
+            // Ensure payment method exists
+            $paymentMethod = \App\Models\PaymentMethod::firstOrCreate(
+                ['code' => 'razorpay'],
+                ['name' => 'Razorpay', 'is_active' => true]
+            );
+
             // Create Razorpay order
             $razorpayOrder = $this->razorpay->order->create([
                 'amount' => $amount * 100, // Convert to paise
@@ -68,12 +74,11 @@ class RazorpayService
             // Log payment attempt
             PaymentAttempt::create([
                 'order_id' => $order->id,
-                'gateway' => 'razorpay',
-                'gateway_order_id' => $razorpayOrder->id,
+                'payment_method_id' => $paymentMethod->id,
+                'attempt_id' => $razorpayOrder->id,
                 'amount' => $amount,
-                'currency' => 'INR',
                 'status' => 'initiated',
-                'request_data' => $razorpayOrder->toArray(),
+                'gateway_response' => $razorpayOrder->toArray(),
             ]);
 
             DB::commit();
@@ -158,6 +163,14 @@ class RazorpayService
                 'order_id' => $orderId
             ]);
 
+            // Handle webhook verified markers
+            if ($signature === 'webhook_verified') {
+                return [
+                    'success' => true,
+                    'message' => 'Verified via webhook'
+                ];
+            }
+
             $attributes = [
                 'razorpay_order_id' => $orderId,
                 'razorpay_payment_id' => $paymentId,
@@ -196,6 +209,29 @@ class RazorpayService
     }
 
     /**
+     * Verify webhook signature
+     */
+    public function verifyWebhookSignature($payload, $signature)
+    {
+        $webhookSecret = config('services.razorpay.webhook_secret');
+
+        if (empty($webhookSecret)) {
+            Log::warning('Razorpay webhook secret not configured. Skipping verification.');
+            return true;
+        }
+
+        try {
+            $this->razorpay->utility->verifyWebhookSignature($payload, $signature, $webhookSecret);
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Razorpay Webhook Signature Verification Failed', [
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    /**
      * Process payment after verification
      */
     public function processPayment(Order $order, array $paymentData)
@@ -217,32 +253,29 @@ class RazorpayService
             // Get payment details
             $razorpayPayment = $this->razorpay->payment->fetch($paymentData['razorpay_payment_id']);
 
+            // Map Razorpay status to DB enums
+            $paymentStatus = 'failed';
+            if ($razorpayPayment->status === 'captured' || $razorpayPayment->status === 'authorized') {
+                $paymentStatus = 'completed';
+            }
+
             // Create payment record
             $payment = Payment::create([
                 'order_id' => $order->id,
-                'payment_method' => 'razorpay',
-                'amount' => $order->grand_total,
-                'currency' => 'INR',
-                'status' => $razorpayPayment->status,
+                'payment_method' => 'online', // ENUM('cod', 'online')
                 'transaction_id' => $razorpayPayment->id,
-                'gateway_order_id' => $paymentData['razorpay_order_id'],
-                'payment_details' => [
-                    'method' => $razorpayPayment->method ?? 'card',
-                    'card_type' => $razorpayPayment->card->type ?? null,
-                    'card_network' => $razorpayPayment->card->network ?? null,
-                    'bank' => $razorpayPayment->bank ?? null,
-                    'wallet' => $razorpayPayment->wallet ?? null,
-                    'vpa' => $razorpayPayment->vpa ?? null,
-                ],
-                'gateway_response' => $razorpayPayment->toArray(),
+                'amount' => $order->grand_total,
+                'status' => $paymentStatus, // ENUM('pending', 'processing', 'completed', 'failed', ...)
+                'payment_gateway' => 'razorpay',
+                'response_data' => $razorpayPayment->toArray(),
+                'paid_at' => $razorpayPayment->status === 'captured' ? now() : null,
             ]);
 
             // Update payment attempt
-            PaymentAttempt::where('gateway_order_id', $paymentData['razorpay_order_id'])
+            PaymentAttempt::where('attempt_id', $paymentData['razorpay_order_id'])
                 ->update([
-                    'status' => $razorpayPayment->status,
-                    'gateway_payment_id' => $razorpayPayment->id,
-                    'response_data' => $razorpayPayment->toArray(),
+                    'status' => $razorpayPayment->status === 'captured' ? 'success' : 'failed',
+                    'gateway_response' => $razorpayPayment->toArray(),
                     'updated_at' => now()
                 ]);
 

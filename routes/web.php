@@ -109,6 +109,11 @@ Route::name('customer.')->group(function () {
             Route::post('/razorpay/order', [CustomerCheckout::class, 'createRazorpayOrder'])->name('razorpay.order');
             Route::post('/cod', [CustomerCheckout::class, 'processCheckout'])->name('cod');
         });
+
+        // Public callback and webhook for Razorpay
+        Route::post('/checkout/payment/callback', [CustomerCheckout::class, 'paymentCallback'])->name('customer.checkout.payment.callback');
+        Route::post('/razorpay/webhook', [App\Http\Controllers\Customer\RazorpayWebhookController::class, 'handle'])->name('customer.razorpay.webhook');
+        Route::get('/checkout/confirmation/{order}', [CustomerCheckout::class, 'confirmation'])->name('customer.checkout.confirmation');
     });
 
     /*

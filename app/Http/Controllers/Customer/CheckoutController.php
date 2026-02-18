@@ -118,38 +118,43 @@ class CheckoutController extends Controller
     private function processOnlinePayment(Request $request)
     {
         $cart = $this->cartHelper->getCart();
-
-        // Ensure shipping cost is set in request data session
-        // (It was merged in processCheckout, but good to be explicit)
         $shippingCost = $this->calculateShippingCost($cart);
+
         $data = $request->all();
         $data['shipping_cost'] = $shippingCost;
+        $data['payment_method'] = 'online';
 
-        session([
-            'checkout_data' => $data
-        ]);
+        try {
+            DB::beginTransaction();
 
-        // Calculate correct total including shipping
-        $grandTotal = $cart['subtotal'] + $cart['tax_total'] + $shippingCost - ($cart['discount_total'] ?? 0);
+            // Create order, items and update stock
+            $order = $this->checkoutService->createOrder($data);
+            $this->checkoutService->createOrderItems($order);
+            $this->checkoutService->updateStock($order);
 
-        $amountInPaise = (int) round($grandTotal * 100);
+            $razorpayOrder = $this->razorpayService->createOrder($order, $order->grand_total);
 
-        $razorpayOrder = $this->razorpayService->createOrderByAmount($amountInPaise);
+            if (!$razorpayOrder['success']) {
+                throw new \Exception($razorpayOrder['message']);
+            }
 
-        if (!$razorpayOrder['success']) {
-            return back()->with('error', $razorpayOrder['message']);
+            DB::commit();
+
+            session(['checkout_data' => $data, 'last_order_id' => $order->id]);
+
+            return view('customer.checkout.payment', [
+                'keyId' => $razorpayOrder['key_id'],
+                'orderId' => $razorpayOrder['order_id'],
+                'amount' => $order->grand_total,
+                'customer' => Auth::guard('customer')->user(),
+                'order' => $order
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Razorpay Process Online Payment Failed', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Payment initialization failed: ' . $e->getMessage());
         }
-
-        session([
-            'razorpay_order_id' => $razorpayOrder['order_id']
-        ]);
-
-        return view('customer.checkout.payment', [
-            'keyId' => $razorpayOrder['key_id'],
-            'orderId' => $razorpayOrder['order_id'],
-            'amount' => $grandTotal,
-            'customer' => Auth::guard('customer')->user()
-        ]);
     }
 
     /* =====================================================
@@ -157,6 +162,8 @@ class CheckoutController extends Controller
      ===================================================== */
     public function paymentCallback(Request $request)
     {
+        Log::info('Razorpay Callback Received', $request->all());
+
         if (session('callback_in_progress')) {
             return response()->json(['status' => 'error', 'message' => 'Processing in progress'], 429);
         }
@@ -172,40 +179,61 @@ class CheckoutController extends Controller
                 throw new \Exception('Missing payment details');
             }
 
-            $verified = $this->razorpayService->verifyPayment($paymentId, $razorpayOrderId, $signature);
+            // Get the order - it should have been created in createRazorpayOrder
+            $order = Order::whereHas('paymentAttempts', function ($q) use ($razorpayOrderId) {
+                $q->where('attempt_id', $razorpayOrderId);
+            })->orWhere('id', session('last_order_id'))->first();
 
-            if ($verified) {
-                $checkoutData = session('checkout_data');
-                if (!$checkoutData) {
-                    throw new \Exception('Checkout session expired. Please contact support if your payment was deducted.');
-                }
-
-                $paymentData = [
-                    'payment_id' => $paymentId,
-                    'razorpay_order_id' => $razorpayOrderId,
-                    'method' => 'online'
-                ];
-
-                $result = $this->checkoutService->placeOrder($checkoutData, $paymentData);
-
-                if (!empty($result['order'])) {
-                    // Try to create delhivery order
-                    try {
-                        $this->delhiveryService->createOrder($result['order']);
-                    } catch (\Exception $e) {
-                        Log::error('Delhivery order creation failed on callback', ['error' => $e->getMessage()]);
-                    }
-
-                    session()->forget(['checkout_data', 'razorpay_order_id', 'checkout_in_progress', 'callback_in_progress']);
-                    return redirect()->route('customer.checkout.confirmation', $result['order']->id);
-                }
+            if (!$order) {
+                throw new \Exception('Order not found. Please contact support.');
             }
 
-            session()->forget(['checkout_in_progress', 'callback_in_progress']);
-            return redirect()->route('customer.checkout.payment.failed')->with('error', 'Payment verification failed.');
+            // Process payment verification and finalizing
+            $paymentData = [
+                'razorpay_payment_id' => $paymentId,
+                'razorpay_order_id' => $razorpayOrderId,
+                'razorpay_signature' => $signature
+            ];
+
+            $result = $this->razorpayService->processPayment($order, $paymentData);
+
+            if (!$result['success']) {
+                throw new \Exception($result['message']);
+            }
+
+            // Finalize order (clear cart, send email etc.)
+            $this->checkoutService->finalizeOrder($order);
+
+            // Try to create delhivery order
+            try {
+                $this->delhiveryService->createOrder($order);
+            } catch (\Exception $e) {
+                Log::error('Delhivery order creation failed on callback', ['error' => $e->getMessage()]);
+            }
+
+            session()->forget(['checkout_data', 'razorpay_order_id', 'checkout_in_progress', 'callback_in_progress', 'last_order_id']);
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'redirect_url' => route('customer.checkout.confirmation', $order->id)
+                ]);
+            }
+
+            return redirect()->route('customer.checkout.confirmation', $order->id);
+
         } catch (\Exception $e) {
-            session()->forget(['checkout_in_progress', 'callback_in_progress']);
+            session()->forget(['callback_in_progress']);
             Log::error('Payment callback failed', ['error' => $e->getMessage()]);
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'redirect_url' => route('customer.checkout.payment.failed')
+                ], 400);
+            }
+
             return redirect()->route('customer.checkout.payment.failed')->with('error', $e->getMessage());
         }
     }
@@ -265,26 +293,59 @@ class CheckoutController extends Controller
             ], 400);
         }
 
+        try {
+            $this->validateCheckout($request);
+            $this->checkoutService->validateCart();
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 400);
+        }
+
         // Calculate shipping cost securely
         $shippingCost = $this->calculateShippingCost($cart);
 
         // Prepare data securely
         $data = $request->all();
         $data['shipping_cost'] = $shippingCost;
+        $data['payment_method'] = 'online';
 
-        // Store checkout data for callback
-        session(['checkout_data' => $data]);
+        try {
+            DB::beginTransaction();
 
-        // Calculate correct total including shipping
-        $grandTotal = $cart['subtotal'] + $cart['tax_total'] + $shippingCost - ($cart['discount_total'] ?? 0);
+            // Create order, items and update stock (reserves stock)
+            $order = $this->checkoutService->createOrder($data);
+            $this->checkoutService->createOrderItems($order);
+            $this->checkoutService->updateStock($order);
 
-        // Razorpay expects paise
-        $amountInPaise = (int) round($grandTotal * 100);
+            // Calculate correct total including shipping
+            $grandTotal = $order->grand_total;
 
-        $razorpayOrder = $this->razorpayService
-            ->createOrderByAmount($amountInPaise);
+            // Razorpay expects paise
+            $amountInPaise = (int) round($grandTotal * 100);
 
-        return response()->json($razorpayOrder);
+            $razorpayOrder = $this->razorpayService->createOrder($order, $grandTotal);
+
+            if (!$razorpayOrder['success']) {
+                throw new \Exception($razorpayOrder['message']);
+            }
+
+            DB::commit();
+
+            // Store checkout data and order_id for callback
+            session(['checkout_data' => $data, 'last_order_id' => $order->id]);
+
+            return response()->json($razorpayOrder);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Razorpay Order Creation Failed', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to initialize payment: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     // --- Custom Logic ---

@@ -182,7 +182,15 @@ class CartHelper
             return $this->createEmptyCartResponse();
         }
 
-        return $this->formatCartResponse($cart);
+        // Recalculate totals to ensure latest prices and stock info
+        $this->recalculateCartTotals($cart);
+
+        return $this->formatCartResponse($cart->fresh([
+            'items.variant.product.taxClass.rates',
+            'items.variant.product',
+            'items.variant.images',
+            'items.variant.primaryImage.media'
+        ]));
     }
 
     private function getLocalCart()
@@ -214,6 +222,10 @@ class CartHelper
         } else {
             $cart['offer'] = null;
         }
+
+        // Recalculate local cart to sync prices and stock
+        $cart = $this->recalculateLocalCartTotals($cart);
+        $this->saveLocalCart($cart);
 
         return $cart;
     }
@@ -302,7 +314,18 @@ class CartHelper
         // Database cart
         $cart->load('items.variant.product.taxClass.rates');
 
-        $subtotal = $cart->items()->sum('total');
+        $subtotal = 0;
+        foreach ($cart->items as $item) {
+            $variant = $item->variant;
+            if ($variant) {
+                // Update item unit price from variant to stay in sync
+                $item->unit_price = $variant->price;
+                $item->total = $item->unit_price * $item->quantity;
+                $item->save();
+            }
+            $subtotal += $item->total;
+        }
+
         $discountTotal = 0;
         $offer = null;
 
@@ -388,7 +411,14 @@ class CartHelper
         $subtotal = 0;
         $itemsCount = 0;
 
-        foreach ($cart['items'] as $item) {
+        foreach ($cart['items'] as &$item) {
+            $variant = ProductVariant::find($item['variant_id']);
+            if ($variant) {
+                $item['unit_price'] = (float) $variant->price;
+                $item['total'] = $item['unit_price'] * $item['quantity'];
+                // Refresh stock info while we're at it
+                $item['stock_quantity'] = $variant->stock_quantity;
+            }
             $subtotal += $item['total'];
             $itemsCount += $item['quantity'];
         }

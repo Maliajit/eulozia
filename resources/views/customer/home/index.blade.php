@@ -114,7 +114,7 @@
                             @if($category->image)
                                 <img src="{{ Str::startsWith($category->image->url, 'http') ? $category->image->url : asset('storage/' . $category->image->url) }}"
                                     alt="{{ $category->name }}"
-                                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                                    class="w-full h-full object-contain transition-transform duration-700 group-hover:scale-110">
                             @else
                                 <div class="w-full h-full bg-gray-200 flex items-center justify-center">
                                     <span class="text-gray-400">No Image</span>

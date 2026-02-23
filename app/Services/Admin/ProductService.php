@@ -9,6 +9,7 @@ use App\Models\Attribute;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Database\QueryException;
 
 class ProductService
 {
@@ -73,6 +74,31 @@ class ProductService
                 'success' => true,
                 'product' => $product,
                 'message' => 'Product created successfully'
+            ];
+
+        } catch (QueryException $e) {
+            DB::rollBack();
+            $errorMessage = $e->getMessage();
+
+            // Handle duplicate entry error (1062)
+            if ($e->errorInfo[1] == 1062) {
+                if (str_contains($errorMessage, 'products_product_code_unique')) {
+                    $errorMessage = "The product code you entered already exists.";
+                } elseif (str_contains($errorMessage, 'product_variants_sku_unique')) {
+                    $errorMessage = "The SKU entered already exists.";
+                } else {
+                    $errorMessage = "A duplicate entry was detected. Please check your data.";
+                }
+            }
+
+            Log::error('Product creation failed (Database Error)', [
+                'error' => $e->getMessage(),
+                'data' => $data
+            ]);
+
+            return [
+                'success' => false,
+                'error' => $errorMessage
             ];
 
         } catch (\Exception $e) {
@@ -296,6 +322,32 @@ class ProductService
                 'message' => 'Product updated successfully'
             ];
 
+        } catch (QueryException $e) {
+            DB::rollBack();
+            $errorMessage = $e->getMessage();
+
+            // Handle duplicate entry error (1062)
+            if ($e->errorInfo[1] == 1062) {
+                if (str_contains($errorMessage, 'products_product_code_unique')) {
+                    $errorMessage = "The product code you entered already exists.";
+                } elseif (str_contains($errorMessage, 'product_variants_sku_unique')) {
+                    $errorMessage = "The SKU entered already exists.";
+                } else {
+                    $errorMessage = "A duplicate entry was detected. Please check your data.";
+                }
+            }
+
+            Log::error('Product update failed (Database Error)', [
+                'product_id' => $product->id,
+                'error' => $e->getMessage(),
+                'data' => $data
+            ]);
+
+            return [
+                'success' => false,
+                'error' => $errorMessage
+            ];
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Product update failed', [
@@ -349,9 +401,9 @@ class ProductService
             'variants' => function ($query) {
                 $query->with([
                     'attributes' => function ($q) {
-    $q->with(['attribute:id,name']);
-},
-                   'images:id,path,full_url,thumb_url'
+                        $q->with(['attribute:id,name']);
+                    },
+                    'images:id,path,full_url,thumb_url'
 
                 ])->orderBy('is_default', 'desc');
             }
@@ -461,7 +513,7 @@ class ProductService
                     return [
                         'id' => $image->id,
                         'media_id' => $image->media_id,
-'url' => $image->full_url ?? $image->path,
+                        'url' => $image->full_url ?? $image->path,
                         'is_primary' => (bool) $image->is_primary,
                     ];
                 })->toArray(),
@@ -488,7 +540,7 @@ class ProductService
                 return [
                     'id' => $image->id,
                     'media_id' => $image->media_id,
-'url' => $image->full_url ?? $image->path,
+                    'url' => $image->full_url ?? $image->path,
                     'is_primary' => (bool) $image->is_primary,
                 ];
             })->toArray(),
@@ -504,16 +556,16 @@ class ProductService
         if (!$defaultVariant) {
             return null;
         }
-$mainImage = $defaultVariant->images()
-    ->where('variant_images.is_primary', true)
-    ->first();
+        $mainImage = $defaultVariant->images()
+            ->where('variant_images.is_primary', true)
+            ->first();
 
-if ($mainImage) {
-    return [
-        'id' => $mainImage->id,
-        'url' => $mainImage->full_url ?? $mainImage->path,
-    ];
-}
+        if ($mainImage) {
+            return [
+                'id' => $mainImage->id,
+                'url' => $mainImage->full_url ?? $mainImage->path,
+            ];
+        }
 
 
         return null;
@@ -531,12 +583,12 @@ if ($mainImage) {
 
         $galleryImages = $defaultVariant->images()->where('is_primary', false)->get();
 
-       return $galleryImages->map(function ($image) {
-    return [
-        'id' => $image->id,
-        'url' => $image->full_url ?? $image->path,
-    ];
-})->values()->toArray();
+        return $galleryImages->map(function ($image) {
+            return [
+                'id' => $image->id,
+                'url' => $image->full_url ?? $image->path,
+            ];
+        })->values()->toArray();
 
     }
 
@@ -926,7 +978,7 @@ if ($mainImage) {
         if ($product->product_type === 'simple') {
             Log::info('Updating simple product variant', ['product_id' => $product->id]);
             $variant = $product->defaultVariant;
-            
+
             if (!$variant) {
                 Log::warning('No default variant found for simple product, creating one', ['product_id' => $product->id]);
                 $this->createSimpleProductVariant($product, $data);
@@ -1000,9 +1052,9 @@ if ($mainImage) {
                 ]);
                 $submittedVariantIds[] = $variant->id;
                 Log::debug('New variant created during update', ['variant_id' => $variant->id, 'sku' => $variant->sku]);
-                
+
             }
-            
+
             if (isset($variantData['attributes'])) {
                 $this->syncVariantAttributes($variant, $variantData);
             }

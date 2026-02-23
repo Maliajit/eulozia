@@ -413,11 +413,29 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
                 body: JSON.stringify({ pincode: pincode })
             })
-            .then(response => response.json())
+            .then(async response => {
+                const contentType = response.headers.get("content-type");
+                if (!response.ok) {
+                    if (response.status === 429) {
+                        throw new Error('Too many requests. Please wait a moment and try again.');
+                    }
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Error checking pincode serviceability');
+                    }
+                    throw new Error('Server error occurred. Please try again later.');
+                }
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    return response.json();
+                }
+                throw new Error('Invalid response from server');
+            })
             .then(data => {
                 if (data.success && data.available_couriers && data.available_couriers.length > 0) {
                     shippingCost = data.available_couriers[0].rate;
@@ -503,11 +521,13 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
                 body: JSON.stringify(data)
             })
-            .then(response => {
+            .then(async response => {
                 if (response.status === 401) {
                     handleAuthError();
                     return;
@@ -517,7 +537,23 @@
                     window.location.href = response.url;
                     return;
                 }
-                return response.json();
+                
+                const contentType = response.headers.get("content-type");
+                if (!response.ok) {
+                    if (response.status === 429) {
+                        throw new Error('An order is already being processed. Please wait.');
+                    }
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Checkout failed');
+                    }
+                    throw new Error('Server error during checkout. Please try again.');
+                }
+
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    return response.json();
+                }
+                throw new Error('Invalid response from server');
             })
             .then(data => {
                 if (data && data.success) {
@@ -527,7 +563,10 @@
                     alert(data.message);
                 }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error);
+                alert(error.message || 'Something went wrong. Please try again.');
+            });
         }
 
         function initiateOnlinePayment() {
@@ -539,16 +578,34 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
                 body: JSON.stringify(data)
             })
-            .then(response => {
+            .then(async response => {
                 if (response.status === 401) {
                     handleAuthError();
                     return;
                 }
-                return response.json();
+                
+                const contentType = response.headers.get("content-type");
+                if (!response.ok) {
+                    if (response.status === 429) {
+                        throw new Error('Too many requests. Please wait.');
+                    }
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to initiate payment');
+                    }
+                    throw new Error('Server error initializing payment. Please try again.');
+                }
+
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    return response.json();
+                }
+                throw new Error('Invalid response from server');
             })
             .then(res => {
                 if (!res) return;
@@ -575,6 +632,10 @@
                 } else {
                     alert(res.message || 'Failed to initiate payment');
                 }
+            })
+            .catch(error => {
+                console.error('Payment Error:', error);
+                alert(error.message || 'Failed to initiate payment. Please try again.');
             });
         }
 
@@ -583,11 +644,13 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
                 body: JSON.stringify(paymentResponse)
             })
-            .then(response => {
+            .then(async response => {
                 if (response.status === 401) {
                     handleAuthError();
                     return;
@@ -595,7 +658,33 @@
                 if (response.redirected) {
                     sessionStorage.removeItem('checkout_form_data');
                     window.location.href = response.url;
+                    return;
                 }
+
+                const contentType = response.headers.get("content-type");
+                if (!response.ok) {
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Payment verification failed');
+                    }
+                    throw new Error('Server error verifying payment.');
+                }
+                
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    return response.json();
+                }
+                // If not JSON and not redirected, it might be a confirmation page body if not handled by redirect
+                throw new Error('Invalid response during payment verification');
+            })
+            .then(data => {
+                if (data && data.success && data.redirect_url) {
+                    sessionStorage.removeItem('checkout_form_data');
+                    window.location.href = data.redirect_url;
+                }
+            })
+            .catch(error => {
+                console.error('Callback Error:', error);
+                alert(error.message || 'Payment verification failed. Please contact support.');
             });
         }
     });

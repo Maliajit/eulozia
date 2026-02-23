@@ -69,7 +69,10 @@ class CategoryController extends Controller
 
     public function show($id)
     {
-        $category = Category::with('children', 'parent', 'image')->findOrFail($id);
+        $category = Category::with(['children', 'parent', 'image', 'attributes', 'specificationGroups'])->findOrFail($id);
+
+        // Append spec_group_ids for frontend compatibility if needed
+        $category->spec_group_ids = $category->specificationGroups->pluck('id')->toArray();
 
         if (request()->wantsJson()) {
             return response()->json(['success' => true, 'data' => $category]);
@@ -81,16 +84,59 @@ class CategoryController extends Controller
     {
         $category = Category::findOrFail($id);
 
+        \Log::info("Updating category", [
+            'id' => $id,
+            'received_attributes' => $request->input('attributes'),
+            'received_spec_groups' => $request->input('spec_group_ids')
+        ]);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:categories,slug,' . $id,
             'parent_id' => 'nullable|exists:categories,id',
             'sort_order' => 'integer|min:0',
             'status' => 'boolean',
-            // Add other fields validation
+            'featured' => 'boolean',
+            'show_in_nav' => 'boolean',
+            'description' => 'nullable|string',
+            'image_id' => 'nullable|integer',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string',
+            'meta_keywords' => 'nullable|string',
+            'spec_group_ids' => 'nullable|array',
+            'spec_group_ids.*' => 'exists:specification_groups,id',
+            'attributes' => 'nullable|array',
+            'attributes.*.is_required' => 'boolean',
+            'attributes.*.is_filterable' => 'boolean',
+            'attributes.*.sort_order' => 'integer|min:0',
         ]);
 
         $category->update($request->all());
+
+        // Sync specification groups
+        if ($request->has('spec_group_ids')) {
+            $category->specificationGroups()->sync($request->input('spec_group_ids'));
+        }
+
+        // Sync attributes with pivot data
+        if ($request->has('attributes')) {
+            $syncData = [];
+            $attributes = $request->input('attributes');
+            foreach ($attributes as $attrId => $pivotData) {
+                $syncData[$attrId] = [
+                    'is_required' => $pivotData['is_required'] ?? 0,
+                    'is_filterable' => $pivotData['is_filterable'] ?? 0,
+                    'sort_order' => $pivotData['sort_order'] ?? 0,
+                ];
+            }
+            $syncResult = $category->attributes()->sync($syncData);
+            \Log::info("Attributes sync results", ['result' => $syncResult]);
+        } else {
+            // If attributes key is missing, should we clear them?
+            // Usually yes if we want to allow removing all attributes
+            $category->attributes()->sync([]);
+            \Log::info("Attributes cleared (none received)");
+        }
 
         return response()->json(['success' => true, 'message' => 'Category updated successfully', 'data' => $category]);
     }

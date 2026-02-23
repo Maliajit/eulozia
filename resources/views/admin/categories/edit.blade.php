@@ -158,7 +158,7 @@
         window.openMediaLibrary = async function (search = '', page = 1) {
             console.log('openMediaLibrary called', { search, page });
             try {
-                const response = await axiosInstance.get('/media/data', {
+                const response = await axiosInstance.get('media/data', {
                     params: {
                         per_page: 50,
                         type: 'image',
@@ -189,11 +189,11 @@
 
                     if (mediaItems.length === 0) {
                         mediaGrid.innerHTML = `
-                            <div class="col-span-full text-center py-12">
-                                <i class="fas fa-inbox text-gray-400 text-4xl mb-3"></i>
-                                <p class="text-gray-500">No media found</p>
-                            </div>
-                        `;
+                                            <div class="col-span-full text-center py-12">
+                                                <i class="fas fa-inbox text-gray-400 text-4xl mb-3"></i>
+                                                <p class="text-gray-500">No media found</p>
+                                            </div>
+                                        `;
                         // Even if empty, show modal so user sees it worked
                     } else {
                         mediaItems.forEach(media => {
@@ -208,20 +208,20 @@
                             mediaItem.dataset.url = originalUrl;
 
                             mediaItem.innerHTML = `
-                                <div class="relative overflow-hidden rounded-lg border-2 border-transparent group-hover:border-indigo-500 transition-colors">
-                                    <img src="${mediaUrl}"
-                                         alt="${mediaName}"
-                                         class="w-full h-32 object-cover"
-                                         onerror="this.src='/images/default-image.jpg'">
-                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity"></div>
-                                    <div class="absolute top-2 right-2 hidden group-hover:block">
-                                        <div class="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center">
-                                            <i class="fas fa-check text-white text-xs"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p class="mt-2 text-xs text-gray-600 truncate">${mediaName}</p>
-                            `;
+                                                <div class="relative overflow-hidden rounded-lg border-2 border-transparent group-hover:border-indigo-500 transition-colors">
+                                                    <img src="${mediaUrl}"
+                                                         alt="${mediaName}"
+                                                         class="w-full h-32 object-cover"
+                                                         onerror="this.src='/images/default-image.jpg'">
+                                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity"></div>
+                                                    <div class="absolute top-2 right-2 hidden group-hover:block">
+                                                        <div class="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center">
+                                                            <i class="fas fa-check text-white text-xs"></i>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <p class="mt-2 text-xs text-gray-600 truncate">${mediaName}</p>
+                                            `;
 
                             mediaItem.addEventListener('click', function () {
                                 // Remove selection from all items
@@ -279,7 +279,7 @@
 
             try {
                 toastr.info('Uploading media...');
-                const response = await axiosInstance.post('/media/upload', formData, {
+                const response = await axiosInstance.post('media/upload', formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
 
@@ -318,7 +318,7 @@
         // Load category data
         async function loadCategoryData() {
             try {
-                const response = await axiosInstance.get(`/categories/{{ $id }}`);
+                const response = await axiosInstance.get(`categories/{{ $id }}`);
 
                 if (response.data.success) {
                     categoryData = response.data.data;
@@ -345,25 +345,25 @@
             } catch (error) {
                 console.error('Error loading category:', error);
                 document.getElementById('loadingState').innerHTML = `
-                    <div class="text-center py-12">
-                        <i class="fas fa-exclamation-triangle text-rose-500 text-3xl"></i>
-                        <p class="mt-4 text-gray-600">Failed to load category data</p>
-                        <p class="text-sm text-rose-500 mt-2">${error.message || 'Please try again'}</p>
-                        <a href="{{ route('admin.categories.index') }}" class="btn-secondary mt-4">
-                            <i class="fas fa-arrow-left mr-2"></i>Back to Categories
-                        </a>
-                    </div>
-                `;
+                                    <div class="text-center py-12">
+                                        <i class="fas fa-exclamation-triangle text-rose-500 text-3xl"></i>
+                                        <p class="mt-4 text-gray-600">Failed to load category data</p>
+                                        <p class="text-sm text-rose-500 mt-2">${error.message || 'Please try again'}</p>
+                                        <a href="{{ route('admin.categories.index') }}" class="btn-secondary mt-4">
+                                            <i class="fas fa-arrow-left mr-2"></i>Back to Categories
+                                        </a>
+                                    </div>
+                                `;
             }
         }
 
         // Load parent categories
         async function loadParentCategories() {
             try {
-                const response = await axiosInstance.get('/categories/dropdown', {
+                const response = await axiosInstance.get('categories/dropdown', {
                     params: {
                         exclude_id: {{ $id }}
-                    }
+                                    }
                 });
 
                 if (response.data.success) {
@@ -378,14 +378,19 @@
         // Load attributes
         async function loadAttributes() {
             try {
-                const response = await axiosInstance.get('/attributes/dropdown');
+                const response = await axiosInstance.get('attributes/dropdown');
 
                 if (response.data.success) {
                     allAttributes = response.data.data || [];
-                    console.log('Attributes loaded:', allAttributes.length);
+                    console.log('Attributes loaded:', allAttributes.length, allAttributes);
+                } else {
+                    console.error('Failed to load attributes:', response.data.message);
+                    toastr.error('Failed to load attributes: ' + (response.data.message || 'Unknown error'));
+                    allAttributes = [];
                 }
             } catch (error) {
                 console.error('Error loading attributes:', error);
+                toastr.error('Network error loading attributes');
                 allAttributes = [];
             }
         }
@@ -393,7 +398,7 @@
         // Load specification groups
         async function loadSpecificationGroups() {
             try {
-                const response = await axiosInstance.get('/specification-groups/dropdown');
+                const response = await axiosInstance.get('specification-groups/dropdown');
 
                 if (response.data.success) {
                     allSpecGroups = response.data.data || [];
@@ -410,283 +415,283 @@
             const formContent = document.getElementById('formContent');
 
             formContent.innerHTML = `
-                <form id="categoryForm" class="space-y-8" enctype="multipart/form-data">
-                    <input type="hidden" id="categoryId" value="{{ $id }}">
+                                <form id="categoryForm" class="space-y-8" enctype="multipart/form-data">
+                                    <input type="hidden" id="categoryId" value="{{ $id }}">
 
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <!-- Left Column -->
-                        <div class="lg:col-span-2 space-y-8">
-                            <!-- Basic Information Card -->
-                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div class="px-6 py-4 border-b border-gray-200">
-                                    <h3 class="text-lg font-semibold text-gray-800">Basic Information</h3>
-                                </div>
-                                <div class="p-6 space-y-6">
-                                    <!-- Category Name & Slug -->
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                                Category Name <span class="text-rose-500">*</span>
-                                            </label>
-                                            <input type="text" id="name" name="name" required
-                                                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                                placeholder="e.g., Men's Clothing"
-                                                value="${categoryData.name || ''}">
-                                            <div id="nameError" class="hidden mt-2 text-sm text-rose-600"></div>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                                Slug <span class="text-rose-500">*</span>
-                                            </label>
-                                            <input type="text" id="slug" name="slug" required
-                                                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                                placeholder="e.g., mens-clothing"
-                                                value="${categoryData.slug || ''}">
-                                            <div id="slugError" class="hidden mt-2 text-sm text-rose-600"></div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Parent Category -->
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Parent Category</label>
-                                        <select id="parent_id" name="parent_id"
-                                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                            <option value="">No Parent (Main Category)</option>
-                                            ${generateParentOptions(parentCategories, categoryData.parent_id)}
-                                        </select>
-                                    </div>
-
-                                    <!-- Description -->
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                                        <textarea id="description" name="description" rows="4"
-                                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                            placeholder="Describe this category...">${categoryData.description || ''}</textarea>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- SEO Settings Card -->
-                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div class="px-6 py-4 border-b border-gray-200">
-                                    <h3 class="text-lg font-semibold text-gray-800">SEO Settings</h3>
-                                </div>
-                                <div class="p-6 space-y-6">
-                                    <!-- Meta Title -->
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Meta Title</label>
-                                        <input type="text" id="meta_title" name="meta_title"
-                                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                            placeholder="Title for search engines"
-                                            value="${categoryData.meta_title || ''}">
-                                    </div>
-
-                                    <!-- Meta Description -->
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Meta Description</label>
-                                        <textarea id="meta_description" name="meta_description" rows="3"
-                                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                            placeholder="Description for search engines">${categoryData.meta_description || ''}</textarea>
-                                    </div>
-
-                                    <!-- Meta Keywords -->
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Meta Keywords</label>
-                                        <input type="text" id="meta_keywords" name="meta_keywords"
-                                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                            placeholder="keyword1, keyword2, keyword3"
-                                            value="${categoryData.meta_keywords || ''}">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Specification Groups Card -->
-                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div class="px-6 py-4 border-b border-gray-200">
-                                    <h3 class="text-lg font-semibold text-gray-800">Specification Groups</h3>
-                                </div>
-                                <div class="p-6">
-                                    <p class="text-sm text-gray-600 mb-4">Select specification groups to assign to this category</p>
-
-                                    <div class="mb-4">
-                                        <div class="relative">
-                                            <input type="text" id="specGroupSearch" placeholder="Search specification groups..."
-                                                class="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-full"
-                                                onkeyup="filterSpecGroups()">
-                                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                                        </div>
-                                    </div>
-
-                                    <div class="space-y-3 max-h-96 overflow-y-auto p-4 border rounded-lg bg-gray-50" id="specificationGroupsContainer">
-                                        ${renderSpecificationGroups()}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Attributes Card -->
-                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div class="px-6 py-4 border-b border-gray-200">
-                                    <h3 class="text-lg font-semibold text-gray-800">Attributes</h3>
-                                </div>
-                                <div class="p-6">
-                                    <p class="text-sm text-gray-600 mb-4">Select attributes for variant creation (size, color, etc.)</p>
-
-                                    <div class="mb-4">
-                                        <div class="relative">
-                                            <input type="text" id="attributeSearch" placeholder="Search attributes..."
-                                                class="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-full"
-                                                onkeyup="filterAttributes()">
-                                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                                        </div>
-                                    </div>
-
-                                    <div class="overflow-x-auto">
-                                        <table class="min-w-full divide-y divide-gray-200">
-                                            <thead class="bg-gray-50">
-                                                <tr>
-                                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                        <input type="checkbox" id="selectAllAttributes" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                                               onchange="toggleAllAttributes(this.checked)">
-                                                    </th>
-                                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                        Attribute
-                                                    </th>
-                                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                        Required
-                                                    </th>
-                                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                        Filterable
-                                                    </th>
-                                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                        Sort Order
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody class="bg-white divide-y divide-gray-200" id="attributesContainer">
-                                                ${renderAttributes()}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Right Column -->
-                        <div class="space-y-8">
-                            <!-- Image Upload Card -->
-                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div class="px-6 py-4 border-b border-gray-200">
-                                    <h3 class="text-lg font-semibold text-gray-800">Category Image</h3>
-                                </div>
-                                <div class="p-6">
-                                    <div class="text-center">
-                                        <!-- Image Preview -->
-                                        <div id="imagePreview" class="mb-4">
-                                            ${categoryData.image_url ?
-                    `<div class="w-full h-64 rounded-lg overflow-hidden border">
-                                                    <img src="${categoryData.image_url}" alt="${categoryData.name}" class="w-full h-full object-cover">
-                                                </div>` :
-                    `<div class="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-300">
-                                                    <div class="text-center">
-                                                        <i class="fas fa-image text-gray-400 text-4xl mb-2"></i>
-                                                        <p class="text-sm text-gray-500">No image selected</p>
+                                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                        <!-- Left Column -->
+                                        <div class="lg:col-span-2 space-y-8">
+                                            <!-- Basic Information Card -->
+                                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                                <div class="px-6 py-4 border-b border-gray-200">
+                                                    <h3 class="text-lg font-semibold text-gray-800">Basic Information</h3>
+                                                </div>
+                                                <div class="p-6 space-y-6">
+                                                    <!-- Category Name & Slug -->
+                                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                        <div>
+                                                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                                Category Name <span class="text-rose-500">*</span>
+                                                            </label>
+                                                            <input type="text" id="name" name="name" required
+                                                                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                                placeholder="e.g., Men's Clothing"
+                                                                value="${categoryData.name || ''}">
+                                                            <div id="nameError" class="hidden mt-2 text-sm text-rose-600"></div>
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                                Slug <span class="text-rose-500">*</span>
+                                                            </label>
+                                                            <input type="text" id="slug" name="slug" required
+                                                                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                                placeholder="e.g., mens-clothing"
+                                                                value="${categoryData.slug || ''}">
+                                                            <div id="slugError" class="hidden mt-2 text-sm text-rose-600"></div>
+                                                        </div>
                                                     </div>
-                                                </div>`
+
+                                                    <!-- Parent Category -->
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 mb-2">Parent Category</label>
+                                                        <select id="parent_id" name="parent_id"
+                                                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                                            <option value="">No Parent (Main Category)</option>
+                                                            ${generateParentOptions(parentCategories, categoryData.parent_id)}
+                                                        </select>
+                                                    </div>
+
+                                                    <!-- Description -->
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                                                        <textarea id="description" name="description" rows="4"
+                                                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                            placeholder="Describe this category...">${categoryData.description || ''}</textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- SEO Settings Card -->
+                                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                                <div class="px-6 py-4 border-b border-gray-200">
+                                                    <h3 class="text-lg font-semibold text-gray-800">SEO Settings</h3>
+                                                </div>
+                                                <div class="p-6 space-y-6">
+                                                    <!-- Meta Title -->
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 mb-2">Meta Title</label>
+                                                        <input type="text" id="meta_title" name="meta_title"
+                                                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                            placeholder="Title for search engines"
+                                                            value="${categoryData.meta_title || ''}">
+                                                    </div>
+
+                                                    <!-- Meta Description -->
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 mb-2">Meta Description</label>
+                                                        <textarea id="meta_description" name="meta_description" rows="3"
+                                                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                            placeholder="Description for search engines">${categoryData.meta_description || ''}</textarea>
+                                                    </div>
+
+                                                    <!-- Meta Keywords -->
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 mb-2">Meta Keywords</label>
+                                                        <input type="text" id="meta_keywords" name="meta_keywords"
+                                                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                            placeholder="keyword1, keyword2, keyword3"
+                                                            value="${categoryData.meta_keywords || ''}">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Specification Groups Card -->
+                                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                                <div class="px-6 py-4 border-b border-gray-200">
+                                                    <h3 class="text-lg font-semibold text-gray-800">Specification Groups</h3>
+                                                </div>
+                                                <div class="p-6">
+                                                    <p class="text-sm text-gray-600 mb-4">Select specification groups to assign to this category</p>
+
+                                                    <div class="mb-4">
+                                                        <div class="relative">
+                                                            <input type="text" id="specGroupSearch" placeholder="Search specification groups..."
+                                                                class="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-full"
+                                                                onkeyup="filterSpecGroups()">
+                                                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="space-y-3 max-h-96 overflow-y-auto p-4 border rounded-lg bg-gray-50" id="specificationGroupsContainer">
+                                                        ${renderSpecificationGroups()}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Attributes Card -->
+                                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                                <div class="px-6 py-4 border-b border-gray-200">
+                                                    <h3 class="text-lg font-semibold text-gray-800">Attributes</h3>
+                                                </div>
+                                                <div class="p-6">
+                                                    <p class="text-sm text-gray-600 mb-4">Select attributes for variant creation (size, color, etc.)</p>
+
+                                                    <div class="mb-4">
+                                                        <div class="relative">
+                                                            <input type="text" id="attributeSearch" placeholder="Search attributes..."
+                                                                class="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-full"
+                                                                onkeyup="filterAttributes()">
+                                                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="overflow-x-auto">
+                                                        <table class="min-w-full divide-y divide-gray-200">
+                                                            <thead class="bg-gray-50">
+                                                                <tr>
+                                                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                                        <input type="checkbox" id="selectAllAttributes" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                                                               onchange="toggleAllAttributes(this.checked)">
+                                                                    </th>
+                                                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                                        Attribute
+                                                                    </th>
+                                                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                                        Required
+                                                                    </th>
+                                                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                                        Filterable
+                                                                    </th>
+                                                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                                        Sort Order
+                                                                    </th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody class="bg-white divide-y divide-gray-200" id="attributesContainer">
+                                                                ${renderAttributes()}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Right Column -->
+                                        <div class="space-y-8">
+                                            <!-- Image Upload Card -->
+                                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                                <div class="px-6 py-4 border-b border-gray-200">
+                                                    <h3 class="text-lg font-semibold text-gray-800">Category Image</h3>
+                                                </div>
+                                                <div class="p-6">
+                                                    <div class="text-center">
+                                                        <!-- Image Preview -->
+                                                        <div id="imagePreview" class="mb-4">
+                                                            ${categoryData.image_url ?
+                    `<div class="w-full h-64 rounded-lg overflow-hidden border">
+                                                                    <img src="${categoryData.image_url}" alt="${categoryData.name}" class="w-full h-full object-cover">
+                                                                </div>` :
+                    `<div class="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-300">
+                                                                    <div class="text-center">
+                                                                        <i class="fas fa-image text-gray-400 text-4xl mb-2"></i>
+                                                                        <p class="text-sm text-gray-500">No image selected</p>
+                                                                    </div>
+                                                                </div>`
                 }
-                                        </div>
+                                                        </div>
 
-                                        <input type="hidden" id="image_id" name="image_id" value="${categoryData.image_id || ''}">
+                                                        <input type="hidden" id="image_id" name="image_id" value="${categoryData.image_id || ''}">
 
-                                        <!-- Action Buttons -->
-                                        <div class="flex flex-col space-y-2">
-                                            <button type="button" onclick="openMediaLibrary()" class="btn-secondary">
-                                                <i class="fas fa-images mr-2"></i>Select from Media Library
-                                            </button>
-                                            <button type="button" onclick="clearImage()" class="btn-secondary bg-gray-100 text-gray-700 hover:bg-gray-200">
-                                                <i class="fas fa-times mr-2"></i>Remove Image
-                                            </button>
+                                                        <!-- Action Buttons -->
+                                                        <div class="flex flex-col space-y-2">
+                                                            <button type="button" onclick="openMediaLibrary()" class="btn-secondary">
+                                                                <i class="fas fa-images mr-2"></i>Select from Media Library
+                                                            </button>
+                                                            <button type="button" onclick="clearImage()" class="btn-secondary bg-gray-100 text-gray-700 hover:bg-gray-200">
+                                                                <i class="fas fa-times mr-2"></i>Remove Image
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Settings Card -->
+                                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                                <div class="px-6 py-4 border-b border-gray-200">
+                                                    <h3 class="text-lg font-semibold text-gray-800">Settings</h3>
+                                                </div>
+                                                <div class="p-6 space-y-4">
+                                                    <!-- Sort Order -->
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 mb-2">Sort Order</label>
+                                                        <input type="number" id="sort_order" name="sort_order" value="${categoryData.sort_order || 0}" min="0"
+                                                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                                    </div>
+
+                                                    <!-- Status Toggle -->
+                                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                                        <div>
+                                                            <p class="text-sm font-medium text-gray-700">Status</p>
+                                                            <p class="text-xs text-gray-500">Category visibility</p>
+                                                        </div>
+                                                        <label class="switch">
+                                                            <input type="checkbox" id="status" name="status" ${categoryData.status ? 'checked' : ''}>
+                                                            <span class="slider round"></span>
+                                                        </label>
+                                                    </div>
+
+                                                    <!-- Featured Toggle -->
+                                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                                        <div>
+                                                            <p class="text-sm font-medium text-gray-700">Featured</p>
+                                                            <p class="text-xs text-gray-500">Show in featured sections</p>
+                                                        </div>
+                                                        <label class="switch">
+                                                            <input type="checkbox" id="featured" name="featured" ${categoryData.featured ? 'checked' : ''}>
+                                                            <span class="slider round"></span>
+                                                        </label>
+                                                    </div>
+
+                                                    <!-- Show in Navigation -->
+                                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                                        <div>
+                                                            <p class="text-sm font-medium text-gray-700">Show in Navigation</p>
+                                                            <p class="text-xs text-gray-500">Display in main navigation</p>
+                                                        </div>
+                                                        <label class="switch">
+                                                            <input type="checkbox" id="show_in_nav" name="show_in_nav" ${categoryData.show_in_nav ? 'checked' : ''}>
+                                                            <span class="slider round"></span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Save Card -->
+                                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                                <div class="px-6 py-4 border-b border-gray-200">
+                                                    <h3 class="text-lg font-semibold text-gray-800">Save Changes</h3>
+                                                </div>
+                                                <div class="p-6">
+                                                    <div class="space-y-4">
+                                                        <div class="text-sm text-gray-600">
+                                                            <p class="mb-2"><i class="fas fa-info-circle text-indigo-500 mr-2"></i>Review all information before saving</p>
+                                                        </div>
+
+                                                        <div class="flex space-x-3">
+                                                            <a href="{{ route('admin.categories.index') }}" class="btn-secondary flex-1 text-center">
+                                                                Cancel
+                                                            </a>
+                                                            <button type="submit" class="btn-primary flex-1">
+                                                                <i class="fas fa-save mr-2"></i>Update Category
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-
-                            <!-- Settings Card -->
-                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div class="px-6 py-4 border-b border-gray-200">
-                                    <h3 class="text-lg font-semibold text-gray-800">Settings</h3>
-                                </div>
-                                <div class="p-6 space-y-4">
-                                    <!-- Sort Order -->
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Sort Order</label>
-                                        <input type="number" id="sort_order" name="sort_order" value="${categoryData.sort_order || 0}" min="0"
-                                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                    </div>
-
-                                    <!-- Status Toggle -->
-                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                        <div>
-                                            <p class="text-sm font-medium text-gray-700">Status</p>
-                                            <p class="text-xs text-gray-500">Category visibility</p>
-                                        </div>
-                                        <label class="switch">
-                                            <input type="checkbox" id="status" name="status" ${categoryData.status ? 'checked' : ''}>
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </div>
-
-                                    <!-- Featured Toggle -->
-                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                        <div>
-                                            <p class="text-sm font-medium text-gray-700">Featured</p>
-                                            <p class="text-xs text-gray-500">Show in featured sections</p>
-                                        </div>
-                                        <label class="switch">
-                                            <input type="checkbox" id="featured" name="featured" ${categoryData.featured ? 'checked' : ''}>
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </div>
-
-                                    <!-- Show in Navigation -->
-                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                        <div>
-                                            <p class="text-sm font-medium text-gray-700">Show in Navigation</p>
-                                            <p class="text-xs text-gray-500">Display in main navigation</p>
-                                        </div>
-                                        <label class="switch">
-                                            <input type="checkbox" id="show_in_nav" name="show_in_nav" ${categoryData.show_in_nav ? 'checked' : ''}>
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Save Card -->
-                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div class="px-6 py-4 border-b border-gray-200">
-                                    <h3 class="text-lg font-semibold text-gray-800">Save Changes</h3>
-                                </div>
-                                <div class="p-6">
-                                    <div class="space-y-4">
-                                        <div class="text-sm text-gray-600">
-                                            <p class="mb-2"><i class="fas fa-info-circle text-indigo-500 mr-2"></i>Review all information before saving</p>
-                                        </div>
-
-                                        <div class="flex space-x-3">
-                                            <a href="{{ route('admin.categories.index') }}" class="btn-secondary flex-1 text-center">
-                                                Cancel
-                                            </a>
-                                            <button type="submit" class="btn-primary flex-1">
-                                                <i class="fas fa-save mr-2"></i>Update Category
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            `;
+                                </form>
+                            `;
 
             // Setup event listeners
             setupEventListeners();
@@ -714,42 +719,46 @@
         function renderSpecificationGroups() {
             if (allSpecGroups.length === 0) {
                 return `
-                    <div class="text-center py-8 text-gray-500">
-                        No specification groups found. Create groups first.
-                    </div>
-                `;
+                                    <div class="text-center py-8 text-gray-500">
+                                        No specification groups found. Create groups first.
+                                    </div>
+                                `;
             }
 
             const selectedGroups = categoryData.spec_group_ids || [];
 
             return allSpecGroups.map(group => `
-                <div class="spec-group-item flex items-center p-3 bg-white rounded-lg border hover:border-indigo-300 transition-colors">
-                    <input type="checkbox"
-                           id="spec_group_${group.id}"
-                           name="spec_group_ids[]"
-                           value="${group.id}"
-                           class="spec-group-checkbox rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mr-3"
-                           ${selectedGroups.includes(group.id) ? 'checked' : ''}>
-                    <label for="spec_group_${group.id}" class="flex-1 cursor-pointer">
-                        <div class="font-medium text-gray-900">${group.name}</div>
-                    </label>
-                </div>
-            `).join('');
+                                <div class="spec-group-item flex items-center p-3 bg-white rounded-lg border hover:border-indigo-300 transition-colors">
+                                    <input type="checkbox"
+                                           id="spec_group_${group.id}"
+                                           name="spec_group_ids[]"
+                                           value="${group.id}"
+                                           class="spec-group-checkbox rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mr-3"
+                                           ${selectedGroups.includes(group.id) ? 'checked' : ''}>
+                                    <label for="spec_group_${group.id}" class="flex-1 cursor-pointer">
+                                        <div class="font-medium text-gray-900">${group.name}</div>
+                                    </label>
+                                </div>
+                            `).join('');
         }
 
         // Render attributes
         function renderAttributes() {
             if (allAttributes.length === 0) {
                 return `
-                    <tr id="attributesLoading">
-                        <td colspan="5" class="px-4 py-8 text-center text-gray-500">
-                            No attributes found. Create attributes first.
-                        </td>
-                    </tr>
-                `;
+                                    <tr id="attributesLoading">
+                                        <td colspan="5" class="px-4 py-8 text-center text-gray-500">
+                                            <div class="flex flex-col items-center">
+                                                <i class="fas fa-info-circle text-gray-400 text-2xl mb-2"></i>
+                                                <p>No attributes found in the system. Please create attributes first under Product Management.</p>
+                                                <a href="{{ route('admin.categories.attributes-dropdown') }}" class="text-indigo-600 hover:underline mt-2 text-xs">Test Link (Click if list is empty)</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
             }
 
-            const categoryAttributes = categoryData.attributes || [];
+            const categoryAttributes = Array.isArray(categoryData.attributes) ? categoryData.attributes : [];
 
             return allAttributes.map(attribute => {
                 const categoryAttr = categoryAttributes.find(ca => ca.id == attribute.id);
@@ -759,45 +768,45 @@
                 const sortOrder = categoryAttr ? categoryAttr.pivot.sort_order : 0;
 
                 return `
-                    <tr class="attribute-item">
-                        <td class="px-4 py-3 whitespace-nowrap">
-                            <input type="checkbox"
-                                   id="attribute_${attribute.id}"
-                                   data-id="${attribute.id}"
-                                   class="attribute-checkbox rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                   ${isSelected ? 'checked' : ''}
-                                   onchange="toggleAttributeOptions('${attribute.id}', this.checked)">
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="text-sm font-medium text-gray-900">${attribute.name}</div>
-                                <div class="ml-2 text-xs text-gray-500">(${attribute.code})</div>
-                            </div>
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap">
-                            <input type="checkbox"
-                                   id="attribute_${attribute.id}_required"
-                                   class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 attribute-required"
-                                   ${isSelected ? '' : 'disabled'}
-                                   ${isRequired ? 'checked' : ''}>
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap">
-                            <input type="checkbox"
-                                   id="attribute_${attribute.id}_filterable"
-                                   class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 attribute-filterable"
-                                   ${isSelected ? '' : 'disabled'}
-                                   ${isFilterable ? 'checked' : ''}>
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap">
-                            <input type="number"
-                                   id="attribute_${attribute.id}_order"
-                                   value="${sortOrder}"
-                                   min="0"
-                                   class="attribute-sort-order w-20 border border-gray-300 rounded px-2 py-1 text-sm"
-                                   ${isSelected ? '' : 'disabled'}>
-                        </td>
-                    </tr>
-                `;
+                                    <tr class="attribute-item">
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <input type="checkbox"
+                                                   id="attribute_${attribute.id}"
+                                                   data-id="${attribute.id}"
+                                                   class="attribute-checkbox rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                                   ${isSelected ? 'checked' : ''}
+                                                   onchange="toggleAttributeOptions('${attribute.id}', this.checked)">
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="text-sm font-medium text-gray-900">${attribute.name}</div>
+                                                <div class="ml-2 text-xs text-gray-500">(${attribute.code})</div>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <input type="checkbox"
+                                                   id="attribute_${attribute.id}_required"
+                                                   class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 attribute-required"
+                                                   ${isSelected ? '' : 'disabled'}
+                                                   ${isRequired ? 'checked' : ''}>
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <input type="checkbox"
+                                                   id="attribute_${attribute.id}_filterable"
+                                                   class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 attribute-filterable"
+                                                   ${isSelected ? '' : 'disabled'}
+                                                   ${isFilterable ? 'checked' : ''}>
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <input type="number"
+                                                   id="attribute_${attribute.id}_order"
+                                                   value="${sortOrder}"
+                                                   min="0"
+                                                   class="attribute-sort-order w-20 border border-gray-300 rounded px-2 py-1 text-sm"
+                                                   ${isSelected ? '' : 'disabled'}>
+                                        </td>
+                                    </tr>
+                                `;
             }).join('');
         }
 
@@ -905,12 +914,12 @@
                 // Update preview
                 const preview = document.getElementById('imagePreview');
                 preview.innerHTML = `
-                    <div class="w-full h-64 rounded-lg overflow-hidden border">
-                        <img src="${selectedMediaUrl}"
-                             alt="Selected image"
-                             class="w-full h-full object-cover">
-                    </div>
-                `;
+                                    <div class="w-full h-64 rounded-lg overflow-hidden border">
+                                        <img src="${selectedMediaUrl}"
+                                             alt="Selected image"
+                                             class="w-full h-full object-cover">
+                                    </div>
+                                `;
 
                 closeMediaLibrary();
                 toastr.success('Image selected successfully');
@@ -924,13 +933,13 @@
             document.getElementById('image_id').value = '';
             const preview = document.getElementById('imagePreview');
             preview.innerHTML = `
-                <div class="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-300">
-                    <div class="text-center">
-                        <i class="fas fa-image text-gray-400 text-4xl mb-2"></i>
-                        <p class="text-sm text-gray-500">No image selected</p>
-                    </div>
-                </div>
-            `;
+                                <div class="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-300">
+                                    <div class="text-center">
+                                        <i class="fas fa-image text-gray-400 text-4xl mb-2"></i>
+                                        <p class="text-sm text-gray-500">No image selected</p>
+                                    </div>
+                                </div>
+                            `;
             selectedMediaId = null;
             selectedMediaUrl = null;
             toastr.info('Image removed');
@@ -989,7 +998,7 @@
             });
 
             try {
-                const response = await axiosInstance.put(`/categories/{{ $id }}`, formData);
+                const response = await axiosInstance.put(`categories/{{ $id }}`, formData);
 
                 if (response.data.success) {
                     toastr.success(response.data.message);
@@ -1039,7 +1048,7 @@
         // Confirm delete
         async function confirmDelete() {
             try {
-                const response = await axiosInstance.delete(`/categories/{{ $id }}`);
+                const response = await axiosInstance.delete(`categories/{{ $id }}`);
 
                 if (response.data.success) {
                     toastr.success(response.data.message);

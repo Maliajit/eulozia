@@ -96,7 +96,7 @@ Route::name('customer.')->group(function () {
     | CHECKOUT
     |--------------------------------------------------------------------------
     */
-    Route::middleware(['throttle:5,1'])->prefix('checkout')->name('checkout.')->group(function () {
+    Route::middleware(['throttle:60,1'])->prefix('checkout')->name('checkout.')->group(function () {
         Route::get('/', [CustomerCheckout::class, 'index'])->name('index');
         Route::post('/shipping/check', [CustomerCheckout::class, 'checkShipping'])->name('shipping.check');
 

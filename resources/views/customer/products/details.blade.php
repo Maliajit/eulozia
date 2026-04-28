@@ -84,7 +84,7 @@
                             </button>
 
                             <!-- Indicators -->
-                            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2" id="mobile-carousel-indicators">
                                 @foreach ($product['images'] as $index => $image)
                                     <button
                                         class="carousel-indicator w-3 h-3 rounded-full bg-secondary bg-opacity-50 transition-all duration-300 {{ $index === 0 ? 'active opacity-100' : '' }}"
@@ -97,7 +97,7 @@
                     <!-- Desktop Grid (Hidden on mobile/tablet) -->
                     <div class="hidden lg:block bg-primary ">
                         <!-- Thumbnail Grid -->
-                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-2">
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-2" id="desktop-image-grid">
                             @foreach ($product['images'] as $index => $image)
                                 <div class="cursor-pointer">
                                     <img src="{{ $image['url'] }}" alt="Product image {{ $index + 1 }}"
@@ -120,7 +120,7 @@
                         @endif
 
                         <!-- Price -->
-                        <div class="flex items-center space-x-3 mb-4 ">
+                        <div class="flex items-center space-x-3 mb-4 " id="product-price-container">
                             <span class="text-secondary text-xl font-bold">₹{{ number_format($product['price'], 2) }}</span>
                             @if($product['compare_price'] && $product['compare_price'] > $product['price'])
                                 <span
@@ -196,7 +196,7 @@
                         </div>
 
                         <!-- Payment Options -->
-                        <div class="mb-6 p-4 bg-gray-800 rounded-lg text-center">
+                        <!-- <div class="mb-6 p-4 bg-gray-800 rounded-lg text-center">
                             <div class="flex items-center justify-between mb-2">
                                 <span class="text-secondary text-sm">PAY NOW ₹270 REST PAY LATER</span>
                             </div>
@@ -207,7 +207,7 @@
                                     CHECK EMI NOW
                                 </button>
                             </div>
-                        </div>
+                        </div> -->
 
                         <!-- Delivery Check -->
                         <div class="mb-6">
@@ -473,7 +473,7 @@
 
         // Fullscreen image functionality
         let currentFullscreenIndex = 0;
-        const productImages = @json(array_column($product['images'], 'url'));
+        let productImages = @json(array_column($product['images'], 'url'));
 
         function openFullscreen(src) {
             currentFullscreenIndex = productImages.indexOf(src);
@@ -602,6 +602,105 @@
             updateCarousel();
         }
 
+        function updateVariantDisplay() {
+            const variants = @json($product['variants'] ?? []);
+            if (variants.length === 0) return;
+
+            const attributeGroups = @json(array_keys($product['attribute_groups'] ?? []));
+            const selectedAttributes = {};
+            let allSelected = true;
+
+            attributeGroups.forEach(group => {
+                const input = document.querySelector(`input[name="attribute_${group}"]:checked`);
+                if (input) {
+                    selectedAttributes[group.toLowerCase()] = input.value;
+                } else {
+                    allSelected = false;
+                }
+            });
+
+            if (!allSelected) return;
+
+            const matchingVariant = variants.find(variant => {
+                return variant.attributes.every(attr => {
+                    const groupCode = (attr.attribute_code || '').toLowerCase();
+                    return selectedAttributes[groupCode] === attr.value;
+                });
+            });
+
+            if (matchingVariant) {
+                const priceContainer = document.getElementById('product-price-container');
+                if (priceContainer) {
+                    const formatter = new Intl.NumberFormat('en-IN', {
+                        style: 'currency',
+                        currency: 'INR',
+                        minimumFractionDigits: 2
+                    });
+                    const priceFormatted = formatter.format(matchingVariant.price).replace('INR', '₹').replace('₹ ', '₹');
+                    
+                    let priceHtml = `<span class="text-secondary text-xl font-bold">${priceFormatted}</span>`;
+                    
+                    if (matchingVariant.compare_price && matchingVariant.compare_price > matchingVariant.price) {
+                        const comparePriceFormatted = formatter.format(matchingVariant.compare_price).replace('INR', '₹').replace('₹ ', '₹');
+                        const discountPercent = Math.round(((matchingVariant.compare_price - matchingVariant.price) / matchingVariant.compare_price) * 100);
+                        
+                        priceHtml += `
+                            <span class="text-accent text-sm line-through">${comparePriceFormatted}</span>
+                            <span class="text-green-500 text-sm font-medium bg-green-500 bg-opacity-20 px-2 py-1 rounded">
+                                ${discountPercent}% OFF
+                            </span>
+                        `;
+                    }
+                    priceContainer.innerHTML = priceHtml;
+                }
+
+                if (matchingVariant.images && matchingVariant.images.length > 0) {
+                    updateImages(matchingVariant.images);
+                }
+            }
+        }
+
+        function updateImages(images) {
+            const desktopGrid = document.getElementById('desktop-image-grid');
+            if (desktopGrid) {
+                desktopGrid.innerHTML = '';
+                images.forEach((img, index) => {
+                    desktopGrid.innerHTML += `
+                        <div class="cursor-pointer">
+                            <img src="${img.url}" alt="Product image ${index + 1}"
+                                class="w-full h-full object-cover" onclick="openFullscreen('${img.url}')">
+                        </div>
+                    `;
+                });
+            }
+
+            const mobileCarousel = document.querySelector('.carousel-images');
+            const mobileIndicators = document.getElementById('mobile-carousel-indicators');
+            if (mobileCarousel && mobileIndicators) {
+                mobileCarousel.innerHTML = '';
+                mobileIndicators.innerHTML = '';
+                
+                images.forEach((img, index) => {
+                    mobileCarousel.innerHTML += `
+                        <div class="carousel-image w-full flex-shrink-0">
+                            <img src="${img.url}" alt="Product image ${index + 1}"
+                                class="w-full h-96 object-cover rounded-lg cursor-pointer"
+                                onclick="openFullscreen('${img.url}')">
+                        </div>
+                    `;
+                    
+                    mobileIndicators.innerHTML += `
+                        <button class="carousel-indicator w-3 h-3 rounded-full bg-secondary bg-opacity-50 transition-all duration-300 ${index === 0 ? 'active opacity-100' : ''}" data-index="${index}"></button>
+                    `;
+                });
+                
+                initializeProductImageCarousel();
+            }
+            
+            productImages = images.map(img => img.url);
+            currentFullscreenIndex = 0;
+        }
+
         // Quantity control
         document.addEventListener('DOMContentLoaded', function () {
             const quantityDisplay = document.querySelector('.quantity-display');
@@ -665,6 +764,12 @@
 
             // Initialize product image carousel
             initializeProductImageCarousel();
+
+            // Dynamic Variant Display update
+            const attributeInputs = document.querySelectorAll('input[type="radio"][name^="attribute_"]');
+            attributeInputs.forEach(input => {
+                input.addEventListener('change', updateVariantDisplay);
+            });
 
             // Size selection modal functionality
             let pendingAction = null; // To store which button was clicked

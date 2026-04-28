@@ -22,7 +22,7 @@
 
             <!-- Navigation Buttons - Hidden on mobile -->
             @if (!empty($product['images']) && count($product['images']) > 1)
-                <button
+                <button type="button"
                     class="carousel-nav carousel-prev absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:block z-10">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
                         fill="currentColor">
@@ -31,7 +31,7 @@
                             clip-rule="evenodd" />
                     </svg>
                 </button>
-                <button
+                <button type="button"
                     class="carousel-nav carousel-next absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:block z-10">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
                         fill="currentColor">

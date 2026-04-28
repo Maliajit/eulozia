@@ -68,7 +68,8 @@ function initializeProductCarousels() {
 
         // Next button event
         if (nextButton) {
-            nextButton.addEventListener('click', () => {
+            nextButton.addEventListener('click', (e) => {
+                e.preventDefault();
                 currentIndex = (currentIndex + 1) % totalImages;
                 updateCarousel();
             });
@@ -76,7 +77,8 @@ function initializeProductCarousels() {
 
         // Previous button event
         if (prevButton) {
-            prevButton.addEventListener('click', () => {
+            prevButton.addEventListener('click', (e) => {
+                e.preventDefault();
                 currentIndex = (currentIndex - 1 + totalImages) % totalImages;
                 updateCarousel();
             });

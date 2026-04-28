@@ -68,14 +68,14 @@
                             </div>
 
                             <!-- Navigation Buttons -->
-                            <button
+                            <button type="button"
                                 class="carousel-prev absolute left-2 top-1/2 transform -translate-y-1/2 bg-primary bg-opacity-70 text-secondary p-2 rounded hover:bg-opacity-100 transition-all duration-300">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M15 19l-7-7 7-7"></path>
                                 </svg>
                             </button>
-                            <button
+                            <button type="button"
                                 class="carousel-next absolute right-2 top-1/2 transform -translate-y-1/2 bg-primary bg-opacity-70 text-secondary p-2 rounded-full hover:bg-opacity-100 transition-all duration-300">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
@@ -213,12 +213,15 @@
                         <div class="mb-6">
                             <h3 class="text-secondary font-semibold mb-3">CHECK ESTIMATED DELIVERY</h3>
                             <div class="flex space-x-2">
-                                <input type="text" placeholder="380016"
+                                <input type="text" id="pincodeInput" placeholder="380016" maxlength="6"
                                     class="flex-1 bg-gray-800 text-secondary px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent">
-                                <button
+                                <button type="button" id="checkPincodeBtn"
                                     class="bg-accent text-primary px-6 py-2 rounded hover:bg-gray-300 transition-colors duration-300">
                                     CHECK
                                 </button>
+                            </div>
+                            <div id="deliveryEstimationResult" class="mt-3 text-sm hidden">
+                                <!-- Results will be injected here -->
                             </div>
                         </div>
 
@@ -386,15 +389,15 @@
     <!-- Fullscreen Image Modal -->
     <div id="fullscreenModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex items-center justify-center">
         <div class="relative w-full h-full flex items-center justify-center">
-            <button id="closeFullscreen"
+            <button id="closeFullscreen" type="button"
                 class="absolute top-4 right-4 text-white text-2xl z-10 bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center">
                 ✕
             </button>
-            <button id="prevFullscreen"
+            <button id="prevFullscreen" type="button"
                 class="absolute left-4 text-white text-2xl z-10 bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center">
                 ‹
             </button>
-            <button id="nextFullscreen"
+            <button id="nextFullscreen" type="button"
                 class="absolute right-4 text-white text-2xl z-10 bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center">
                 ›
             </button>
@@ -539,14 +542,16 @@
             }
 
             if (nextButton) {
-                nextButton.addEventListener('click', () => {
+                nextButton.addEventListener('click', (e) => {
+                    e.preventDefault();
                     currentIndex = (currentIndex + 1) % totalImages;
                     updateCarousel();
                 });
             }
 
             if (prevButton) {
-                prevButton.addEventListener('click', () => {
+                prevButton.addEventListener('click', (e) => {
+                    e.preventDefault();
                     currentIndex = (currentIndex - 1 + totalImages) % totalImages;
                     updateCarousel();
                 });
@@ -751,9 +756,9 @@
             });
 
             // Fullscreen modal events
-            document.getElementById('closeFullscreen')?.addEventListener('click', closeFullscreen);
-            document.getElementById('prevFullscreen')?.addEventListener('click', () => navigateFullscreen('prev'));
-            document.getElementById('nextFullscreen')?.addEventListener('click', () => navigateFullscreen('next'));
+            document.getElementById('closeFullscreen')?.addEventListener('click', (e) => { e.preventDefault(); closeFullscreen(); });
+            document.getElementById('prevFullscreen')?.addEventListener('click', (e) => { e.preventDefault(); navigateFullscreen('prev'); });
+            document.getElementById('nextFullscreen')?.addEventListener('click', (e) => { e.preventDefault(); navigateFullscreen('next'); });
 
             // Close modal on background click
             document.getElementById('fullscreenModal')?.addEventListener('click', function (e) {
@@ -978,6 +983,84 @@
                     });
                 });
             });
+            
+            // Pincode Check Functionality
+            const checkPincodeBtn = document.getElementById('checkPincodeBtn');
+            const pincodeInput = document.getElementById('pincodeInput');
+            const estimationResult = document.getElementById('deliveryEstimationResult');
+
+            if (checkPincodeBtn) {
+                checkPincodeBtn.addEventListener('click', async function() {
+                    const pincode = pincodeInput.value.trim();
+                    
+                    if (!pincode || pincode.length !== 6 || !/^\d+$/.test(pincode)) {
+                        showToast('Please enter a valid 6-digit pincode', 'error');
+                        return;
+                    }
+
+                    this.disabled = true;
+                    this.innerHTML = '<svg class="animate-spin h-5 w-5 text-primary mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+                    estimationResult.classList.add('hidden');
+
+                    try {
+                        const response = await axios.post("{{ route('customer.checkout.shipping.check') }}", {
+                            pincode: pincode
+                        });
+
+                        if (response.data.success) {
+                            const data = response.data;
+                            const locationLine = data.city === 'Standard Location' 
+                                ? '' 
+                                : `<p class="text-xs text-gray-500 flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    ${data.city}, ${data.state}
+                                </p>`;
+
+                            estimationResult.innerHTML = `
+                                <div class="p-4 bg-gray-900 border border-green-500 border-opacity-30 rounded-xl shadow-inner animate-fade-in">
+                                    <div class="flex items-center gap-3 text-green-400 mb-2">
+                                        <div class="bg-green-500 bg-opacity-20 p-1.5 rounded-full">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                        </div>
+                                        <span class="font-bold tracking-wide uppercase text-xs">Fast Delivery Available</span>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <p class="text-secondary text-base">Delivering by <span class="text-accent font-bold">${data.estimated_delivery}–${data.estimated_delivery + 2} business days</span></p>
+                                        ${locationLine}
+                                    </div>
+                                </div>
+                            `;
+                            estimationResult.classList.remove('hidden');
+                        } else {
+                            estimationResult.innerHTML = `
+                                <div class="p-4 bg-gray-900 border border-red-500 border-opacity-30 rounded-xl shadow-inner">
+                                    <div class="flex items-center gap-3 text-red-400">
+                                        <div class="bg-red-500 bg-opacity-20 p-1.5 rounded-full">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </div>
+                                        <span class="font-bold tracking-wide uppercase text-xs">Not Serviceable</span>
+                                    </div>
+                                    <p class="text-xs text-gray-400 mt-2">${response.data.message || 'We currently do not deliver to this location.'}</p>
+                                </div>
+                            `;
+                            estimationResult.classList.remove('hidden');
+                        }
+                    } catch (error) {
+                        console.error('Pincode check error:', error);
+                        showToast('Failed to check pincode. Please try again.', 'error');
+                    } finally {
+                        this.disabled = false;
+                        this.innerHTML = 'CHECK';
+                    }
+                });
+            }
         });
     </script>
 @endpush

@@ -265,12 +265,12 @@ class CheckoutController extends Controller
         $pincode = $request->pincode;
 
         $cart = $this->cartHelper->getCart();
-        $city = 'Unknown';
-        $state = 'Unknown';
+        $city = null;
+        $state = null;
 
         try {
             // Fetch city and state from Indian Pincode API
-            $response = Http::timeout(5)->get("https://api.postalpincode.in/pincode/{$pincode}");
+            $response = Http::timeout(10)->get("https://api.postalpincode.in/pincode/{$pincode}");
             
             if ($response->successful()) {
                 $data = $response->json();
@@ -294,23 +294,18 @@ class CheckoutController extends Controller
                         $state = $foundState ?? $state;
                     } else {
                         // Last resort: just take the name of the first post office
-                        $city = $data[0]['PostOffice'][0]['Name'] ?? $city;
-                        $state = $data[0]['PostOffice'][0]['State'] ?? $state;
+                        $city = $data[0]['PostOffice'][0]['Name'] ?? null;
+                        $state = $data[0]['PostOffice'][0]['State'] ?? null;
                     }
-                } else {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Invalid PIN code. Please enter a valid Indian PIN code.'
-                    ]);
                 }
-            } else {
-                // If external API fails, we still allow success but with 'Unknown' 
-                // so user can manually fill. But Log the error.
-                Log::warning('Pincode API failed for: ' . $pincode);
             }
         } catch (\Exception $e) {
             Log::error('Pincode lookup failed: ' . $e->getMessage());
         }
+
+        // Final fallback if still null
+        $city = $city ?? 'Standard Location';
+        $state = $state ?? 'India';
 
         $eta = 5; // Standard ETA
         $customCost = $this->calculateShippingCost($cart);

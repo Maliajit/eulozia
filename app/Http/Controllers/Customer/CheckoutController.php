@@ -14,7 +14,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
+
+use App\Models\Offer;
 
 class CheckoutController extends Controller
 {
@@ -38,11 +41,14 @@ class CheckoutController extends Controller
                 ->with('error', 'Your cart is empty. Please add some products to proceed.');
         }
 
+        $availableOffers = Offer::active()->whereNotNull('code')->get();
+
         return view('customer.checkout.index', [
             'cart' => $cart,
             'codAvailable' => $this->checkoutService->isCODAvailable(),
             'paymentMethods' => $this->checkoutService->getAvailablePaymentMethods(),
             'addresses' => Auth::guard('customer')->user()?->addresses ?? collect(),
+            'availableOffers' => $availableOffers,
         ]);
     }
 
@@ -255,14 +261,58 @@ class CheckoutController extends Controller
      ===================================================== */
     public function checkShipping(Request $request)
     {
-        $request->validate(['pincode' => 'required']);
+        $request->validate(['pincode' => 'required|string|size:6']);
+        $pincode = $request->pincode;
 
         $cart = $this->cartHelper->getCart();
+        $city = 'Unknown';
+        $state = 'Unknown';
 
-        // Bypassing real check for now as per user request
-        $eta = 5;
-        $city = 'Bypassed';
-        $state = 'Bypassed';
+        try {
+            // Fetch city and state from Indian Pincode API
+            $response = Http::timeout(5)->get("https://api.postalpincode.in/pincode/{$pincode}");
+            
+            if ($response->successful()) {
+                $data = $response->json();
+                if (isset($data[0]['Status']) && $data[0]['Status'] === 'Success' && !empty($data[0]['PostOffice'])) {
+                    // Collect potential names
+                    $foundCity = null;
+                    $foundState = null;
+
+                    foreach ($data[0]['PostOffice'] as $office) {
+                        // Priority: District > Division > Block > Name
+                        $potential = $office['District'] ?? $office['Division'] ?? $office['Block'] ?? $office['Name'] ?? '';
+                        if (!empty($potential) && strtolower($potential) !== 'unknown') {
+                            $foundCity = $potential;
+                            $foundState = $office['State'] ?? null;
+                            break;
+                        }
+                    }
+
+                    if ($foundCity) {
+                        $city = $foundCity;
+                        $state = $foundState ?? $state;
+                    } else {
+                        // Last resort: just take the name of the first post office
+                        $city = $data[0]['PostOffice'][0]['Name'] ?? $city;
+                        $state = $data[0]['PostOffice'][0]['State'] ?? $state;
+                    }
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid PIN code. Please enter a valid Indian PIN code.'
+                    ]);
+                }
+            } else {
+                // If external API fails, we still allow success but with 'Unknown' 
+                // so user can manually fill. But Log the error.
+                Log::warning('Pincode API failed for: ' . $pincode);
+            }
+        } catch (\Exception $e) {
+            Log::error('Pincode lookup failed: ' . $e->getMessage());
+        }
+
+        $eta = 5; // Standard ETA
         $customCost = $this->calculateShippingCost($cart);
 
         $customOption = [

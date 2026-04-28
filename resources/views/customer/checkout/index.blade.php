@@ -246,40 +246,105 @@
                     <div class="space-y-3 mb-6">
                         <div class="flex justify-between text-secondary">
                             <span>Subtotal</span>
-                            <span id="summary-subtotal">₹{{ number_format($cart['subtotal']) }}</span>
+                            <span id="summary-subtotal">₹{{ number_format(round($cart['subtotal'])) }}</span>
+                        </div>
+                        @if($cart['discount_total'] > 0)
+                        <div class="flex justify-between text-green-500 font-medium">
+                            <span>Discount @if(isset($cart['offer']) && $cart['offer']['type'] == 'percentage') ({{ round($cart['offer']['discount_value']) }}%) @endif</span>
+                            <span id="summary-discount">- ₹{{ number_format(round($cart['discount_total'])) }}</span>
+                        </div>
+                        @endif
+                        <div class="flex justify-between text-secondary">
+                            <span>Tax</span>
+                            <span id="summary-tax">₹{{ number_format(round($cart['tax_total'] ?? 0)) }}</span>
                         </div>
                         <div class="flex justify-between text-secondary">
                             <span>Shipping</span>
-                            <span id="summary-shipping">₹0</span>
-                        </div>
-                        <div class="flex justify-between text-green-500">
-                            <span>Discount</span>
-                            <span id="summary-discount">- ₹{{ number_format($cart['discount_total'] ?? 0) }}</span>
-                        </div>
-                        <div class="flex justify-between text-secondary">
-                            <span>Tax</span>
-                            <span id="summary-tax">₹{{ number_format($cart['tax_total'] ?? 0) }}</span>
+                            <span id="summary-shipping">₹{{ number_format(round($cart['shipping_total'] ?? 0)) }}</span>
                         </div>
                         <div class="border-t border-gray-800 pt-3">
-                            <div class="flex justify-between text-secondary text-xl font-bold">
+                            <div class="flex justify-between text-secondary text-2xl font-bold">
                                 <span>Total</span>
-                                <span id="summary-total">₹{{ number_format($cart['grand_total']) }}</span>
+                                <span id="summary-total">₹{{ number_format(round($cart['grand_total'])) }}</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Promo Code -->
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-secondary mb-2">Promo Code</label>
-                        <div class="flex space-x-2">
-                            <input type="text" id="promoCode" 
-                                class="flex-1 px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary"
-                                placeholder="Enter code">
-                            <button type="button" id="applyPromo"
-                                class="px-6 py-2 bg-accent text-primary font-bold rounded-lg hover:bg-opacity-90 transition-colors">
-                                Apply
+                    <!-- Promo Code Section -->
+                    <div class="mb-6 border-t border-gray-800 pt-6">
+                        @if(isset($cart['offer']))
+                            <!-- Applied Promo State -->
+                            <div class="flex items-center justify-between p-4 bg-green-500 bg-opacity-10 border border-green-500 border-opacity-20 rounded-xl">
+                                <div class="flex items-center">
+                                    <div class="bg-green-500 p-1.5 rounded-full mr-3">
+                                        <svg class="w-3 h-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] text-green-500 font-bold uppercase tracking-widest mb-0.5">Promo Applied</p>
+                                        <p class="text-sm text-secondary font-bold">{{ $cart['offer']['code'] }}</p>
+                                    </div>
+                                </div>
+                                <button type="button" id="removePromo" class="text-xs text-rose-500 hover:text-rose-400 font-bold uppercase tracking-widest transition-colors flex items-center">
+                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    Remove
+                                </button>
+                            </div>
+                        @else
+                            <!-- Collapsible Promo Input -->
+                            <button type="button" id="togglePromoBtn" class="flex items-center justify-between w-full text-secondary font-bold py-2 group focus:outline-none">
+                                <span class="group-hover:text-accent transition-colors flex items-center">
+                                    Apply Promo Code
+                                    <span class="ml-2 inline-block transition-transform duration-300" id="promoChevron">▼</span>
+                                </span>
                             </button>
-                        </div>
+                            
+                            <div id="promoContent" class="hidden mt-4 space-y-5 animate-fadeIn">
+                                <div class="flex space-x-2">
+                                    <input type="text" id="promoCode" 
+                                        class="flex-1 px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-secondary text-sm"
+                                        placeholder="Enter promo code">
+                                    <button type="button" id="applyPromo"
+                                        class="px-6 py-2.5 bg-accent text-primary font-bold rounded-lg hover:bg-opacity-90 transition-colors uppercase text-sm tracking-wider">
+                                        Apply
+                                    </button>
+                                </div>
+
+                                @if(isset($availableOffers) && $availableOffers->count() > 0)
+                                    <div>
+                                        <div class="flex items-center mb-4">
+                                            <div class="h-px bg-gray-800 flex-1"></div>
+                                            <span class="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Available Offers</span>
+                                            <div class="h-px bg-gray-800 flex-1"></div>
+                                        </div>
+                                        <div class="grid grid-cols-1 gap-2.5">
+                                            @foreach($availableOffers as $offer)
+                                                <div class="offer-card group cursor-pointer p-4 bg-gray-900 border border-gray-800 rounded-xl hover:border-accent hover:bg-gray-800/50 transition-all flex items-center justify-between">
+                                                    <div class="flex-1">
+                                                        <div class="flex items-center mb-1">
+                                                            <span class="text-accent font-black text-sm tracking-wider">{{ $offer->code }}</span>
+                                                            <span class="ml-3 text-[10px] font-bold text-secondary bg-gray-800 px-2 py-0.5 rounded">
+                                                                @if($offer->offer_type === 'percentage')
+                                                                    {{ $offer->discount_value }}% OFF
+                                                                @elseif($offer->offer_type === 'fixed')
+                                                                    ₹{{ $offer->discount_value }} OFF
+                                                                @elseif($offer->offer_type === 'free_shipping')
+                                                                    FREE SHIP
+                                                                @endif
+                                                            </span>
+                                                        </div>
+                                                        <p class="text-xs text-gray-400 font-medium">{{ $offer->name }}</p>
+                                                    </div>
+                                                    <button type="button" onclick="selectPromoCode('{{ $offer->code }}')" 
+                                                        class="ml-4 px-4 py-1.5 text-[10px] font-black text-accent border border-accent rounded-full hover:bg-accent hover:text-primary transition-all uppercase tracking-widest">
+                                                        Apply
+                                                    </button>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Place Order Button -->
@@ -330,8 +395,9 @@
         form.addEventListener('input', saveFormData);
 
         // Handle Pincode Change for Shipping
-        pincodeInput.addEventListener('change', function() {
-            const pincode = this.value;
+        pincodeInput.addEventListener('input', function() {
+            const pincode = this.value.replace(/[^0-9]/g, '');
+            this.value = pincode; // Sanitize input
             if (pincode.length === 6) {
                 checkShipping(pincode);
             }
@@ -438,7 +504,7 @@
             })
             .then(data => {
                 if (data.success && data.available_couriers && data.available_couriers.length > 0) {
-                    shippingCost = data.available_couriers[0].rate;
+                    shippingCost = Math.round(data.available_couriers[0].rate);
                     document.getElementById('summary-shipping').textContent = '₹' + shippingCost;
                     updateTotal();
                     
@@ -450,12 +516,13 @@
                     const standardRateEl = document.querySelector('input[name="shipping"][value="standard"]')?.closest('label')?.querySelector('.font-semibold.text-secondary:last-child');
                     if (standardRateEl) standardRateEl.textContent = '₹' + shippingCost;
 
-                    // Auto-fill city/state if available
-                    if (data.city) document.querySelector('input[name="city"]').value = data.city;
-                    if (data.state) {
+                    // Auto-fill city/state if available and valid
+                    if (data.city && data.city !== 'Unknown') {
+                        document.querySelector('input[name="city"]').value = data.city;
+                    }
+                    if (data.state && data.state !== 'Unknown') {
                         const stateSelect = document.querySelector('select[name="state"]');
                         if (stateSelect) {
-                            // Find option that matches state name
                             const option = Array.from(stateSelect.options).find(opt => opt.value.toLowerCase() === data.state.toLowerCase());
                             if (option) stateSelect.value = option.value;
                         }
@@ -480,7 +547,7 @@
         }
 
         function updateTotal() {
-            const total = subtotal + tax + shippingCost - discount;
+            const total = Math.round(subtotal + tax + shippingCost - discount);
             document.getElementById('summary-total').textContent = '₹' + total.toLocaleString('en-IN');
         }
 
@@ -686,6 +753,99 @@
                 console.error('Callback Error:', error);
                 alert(error.message || 'Payment verification failed. Please contact support.');
             });
+        }
+        // Promo Code Logic
+        window.selectPromoCode = function(code) {
+            const input = document.getElementById('promoCode');
+            if (input) input.value = code;
+            applyCoupon(code);
+        };
+
+        const toggleBtn = document.getElementById('togglePromoBtn');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                const content = document.getElementById('promoContent');
+                const chevron = document.getElementById('promoChevron');
+                content.classList.toggle('hidden');
+                chevron.textContent = content.classList.contains('hidden') ? '▼' : '▲';
+            });
+        }
+
+        const applyBtn = document.getElementById('applyPromo');
+        if (applyBtn) {
+            applyBtn.addEventListener('click', function() {
+                const code = document.getElementById('promoCode').value.trim();
+                if (!code) {
+                    alert('Please enter a promo code');
+                    return;
+                }
+                applyCoupon(code);
+            });
+        }
+
+        const removeBtn = document.getElementById('removePromo');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', async function() {
+                this.disabled = true;
+                this.textContent = '...';
+                try {
+                    const response = await fetch('{{ route("customer.cart.remove-coupon") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    console.error('Error removing coupon:', error);
+                    alert('Failed to remove promo code');
+                    this.disabled = false;
+                    this.innerHTML = `<svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Remove`;
+                }
+            });
+        }
+
+        async function applyCoupon(code) {
+            const btn = document.getElementById('applyPromo');
+            if (!btn) return;
+            
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '...';
+
+            try {
+                const response = await fetch('{{ route("customer.cart.apply-coupon") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ coupon_code: code })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Failed to apply coupon');
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            } catch (error) {
+                console.error('Error applying coupon:', error);
+                alert('Error applying coupon. Please try again.');
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
         }
     });
 </script>

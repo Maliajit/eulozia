@@ -27,6 +27,9 @@ use App\Http\Controllers\Api\Admin\TaxRateController as ApiTaxRate;
 use App\Http\Controllers\Api\Admin\SpecificationController as ApiSpecification;
 use App\Http\Controllers\Api\Admin\SpecificationValueController as ApiSpecificationValue;
 use App\Http\Controllers\Api\Admin\SpecificationGroupController as ApiSpecificationGroup;
+use App\Http\Controllers\Api\Admin\CategoryController as ApiCategory;
+use App\Http\Controllers\Api\Admin\ProductController as ApiProduct;
+use App\Http\Controllers\Api\Admin\OfferController as ApiOffer;
 
 Route::prefix('admin')->group(function () {
 
@@ -427,5 +430,57 @@ Route::prefix('api/admin')->middleware(['web', 'admin.api.auth'])->group(functio
             Route::post('/bulk-update', [ApiSpecificationValue::class, 'bulkUpdate']);
             Route::post('/bulk-delete', [ApiSpecificationValue::class, 'bulkDelete']);
         });
+    });
+
+    // Category Routes
+    Route::prefix('categories')->group(function () {
+        Route::get('/', [ApiCategory::class, 'index']);
+        Route::get('/dropdown', [ApiCategory::class, 'dropdown']);
+        Route::get('/tree', [ApiCategory::class, 'tree']);
+        Route::get('/statistics', [ApiCategory::class, 'statistics']);
+        Route::post('/', [ApiCategory::class, 'store']);
+        Route::get('/{id}', [ApiCategory::class, 'show']);
+        Route::put('/{id}', [ApiCategory::class, 'update']);
+        Route::delete('/{id}', [ApiCategory::class, 'destroy']);
+        Route::post('/{id}/update-status', [ApiCategory::class, 'updateStatus']);
+        Route::post('/bulk-status', [ApiCategory::class, 'bulkUpdateStatus']);
+        Route::post('/bulk-delete', [ApiCategory::class, 'bulkDelete']);
+    });
+
+    // Product Routes
+    Route::prefix('products')->group(function () {
+        Route::get('/', [ApiProduct::class, 'index']);
+        Route::get('/dropdown', [ApiProduct::class, 'dropdown']);
+        Route::get('/statistics', [ApiProduct::class, 'statistics']);
+        Route::get('/check-sku', [ApiProduct::class, 'checkSku']);
+        Route::post('/', [ApiProduct::class, 'store']);
+        Route::get('/{id}', [ApiProduct::class, 'show']);
+        Route::get('/{id}/edit', [ApiProduct::class, 'getForEdit']);
+        Route::put('/{id}', [ApiProduct::class, 'update']);
+        Route::delete('/{id}', [ApiProduct::class, 'destroy']);
+        Route::post('/{id}/toggle-status', [ApiProduct::class, 'toggleStatus']);
+        Route::post('/{id}/toggle-featured', [ApiProduct::class, 'toggleFeatured']);
+        Route::post('/bulk-update', [ApiProduct::class, 'bulkUpdate']);
+        Route::post('/bulk-delete', [ApiProduct::class, 'bulkDelete']);
+        Route::get('/category/{category}/specifications', [ApiProduct::class, 'getCategorySpecifications']);
+        Route::get('/category/{category}/attributes', [ApiProduct::class, 'getCategoryAttributes']);
+        Route::post('/generate-variants', [ApiProduct::class, 'generateVariants']);
+    });
+
+    // Offer Routes
+    Route::prefix('offers')->group(function () {
+        Route::get('/', [ApiOffer::class, 'index']);
+        Route::get('/dropdown', [ApiOffer::class, 'dropdown']);
+        Route::get('/types', [ApiOffer::class, 'types']);
+        Route::get('/statistics', [ApiOffer::class, 'statistics']);
+        Route::get('/validate-code', [ApiOffer::class, 'validateCode']);
+        Route::post('/', [ApiOffer::class, 'store']);
+        Route::get('/{id}', [ApiOffer::class, 'show']);
+        Route::put('/{id}', [ApiOffer::class, 'update']);
+        Route::delete('/{id}', [ApiOffer::class, 'destroy']);
+        Route::post('/{id}/update-status', [ApiOffer::class, 'updateStatus']);
+        Route::post('/{id}/update-auto-apply', [ApiOffer::class, 'updateAutoApply']);
+        Route::post('/bulk-update', [ApiOffer::class, 'bulkUpdate']);
+        Route::post('/bulk-delete', [ApiOffer::class, 'bulkDelete']);
     });
 });

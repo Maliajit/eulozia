@@ -121,10 +121,10 @@
 
                         <!-- Price -->
                         <div class="flex items-center space-x-3 mb-4 " id="product-price-container">
-                            <span class="text-secondary text-xl font-bold">₹{{ number_format($product['price'], 2) }}</span>
+                            <span class="text-secondary text-xl font-bold">₹{{ number_format($product['price']) }}</span>
                             @if($product['compare_price'] && $product['compare_price'] > $product['price'])
                                 <span
-                                    class="text-accent text-sm line-through">₹{{ number_format($product['compare_price'], 2) }}</span>
+                                    class="text-accent text-sm line-through">₹{{ number_format($product['compare_price']) }}</span>
                                 <span class="text-green-500 text-sm font-medium bg-green-500 bg-opacity-20 px-2 py-1 rounded">
                                     {{ $product['discount_percent'] }}% OFF
                                 </span>

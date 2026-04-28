@@ -87,7 +87,7 @@
                                     <div class="flex flex-col sm:flex-row justify-between items-start mb-3 gap-2">
                                         <h4 class="text-white font-bold text-base md:text-lg leading-tight">
                                             {{ $item->product_name ?? 'Product' }}</h4>
-                                        <p class="text-white font-bold text-base md:text-lg">₹{{ number_format($item->unit_price, 2) }}</p>
+                                        <p class="text-white font-bold text-base md:text-lg">₹{{ number_format($item->unit_price) }}</p>
                                     </div>
                                     @if($item->attributes && is_array($item->attributes))
                                         <div class="flex flex-wrap gap-x-4 gap-y-2 mb-4">
@@ -101,7 +101,7 @@
                                         <p class="text-gray-500">Quantity: <span class="text-white">{{ $item->quantity }}</span>
                                         </p>
                                         <p class="text-gray-500">Total: <span
-                                                class="text-white font-bold">₹{{ number_format($item->total, 2) }}</span></p>
+                                                class="text-white font-bold">₹{{ number_format($item->total) }}</span></p>
                                     </div>
                                 </div>
                             </div>
@@ -111,27 +111,27 @@
                         <div class="w-full md:max-w-xs space-y-3">
                             <div class="flex justify-between text-gray-400 text-xs md:text-sm">
                                 <span>Subtotal</span>
-                                <span class="text-white">₹{{ number_format($order->subtotal, 2) }}</span>
+                                <span class="text-white">₹{{ number_format($order->subtotal) }}</span>
                             </div>
                             <div class="flex justify-between text-gray-400 text-xs md:text-sm">
                                 <span>Shipping</span>
-                                <span class="text-white">₹{{ number_format($order->shipping_total, 2) }}</span>
+                                <span class="text-white">₹{{ number_format($order->shipping_total) }}</span>
                             </div>
                             @if($order->tax_total > 0)
                                 <div class="flex justify-between text-gray-400 text-xs md:text-sm">
                                     <span>Tax</span>
-                                    <span class="text-white">₹{{ number_format($order->tax_total, 2) }}</span>
+                                    <span class="text-white">₹{{ number_format($order->tax_total) }}</span>
                                 </div>
                             @endif
                             @if($order->discount_total > 0)
                                 <div class="flex justify-between text-green-500 text-xs md:text-sm">
                                     <span>Discount</span>
-                                    <span>-₹{{ number_format($order->discount_total, 2) }}</span>
+                                    <span>-₹{{ number_format($order->discount_total) }}</span>
                                 </div>
                             @endif
                             <div class="flex justify-between text-white font-bold text-base md:text-lg pt-3 border-t border-gray-800">
                                 <span>Grand Total</span>
-                                <span>₹{{ number_format($order->grand_total, 2) }}</span>
+                                <span>₹{{ number_format($order->grand_total) }}</span>
                             </div>
                         </div>
                     </div>

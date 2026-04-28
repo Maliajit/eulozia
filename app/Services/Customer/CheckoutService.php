@@ -115,8 +115,10 @@ class CheckoutService
 
         Log::info('Finalizing order', ['order_id' => $order->id]);
 
-        // Clear cart (only if this belongs to the current logged-in customer)
-        if ($this->customer && $this->customer->id === $order->customer_id) {
+        // Clear cart
+        if ($order->customer_id) {
+            $this->cartHelper->clearCartByCustomerId($order->customer_id);
+        } else {
             $this->cartHelper->clearCart();
         }
 

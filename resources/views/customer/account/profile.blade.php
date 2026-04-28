@@ -45,9 +45,7 @@
                         <i class="fas fa-map-marker-alt mr-3"></i>
                         Addresses
                     </button>
-                    <form method="POST" action="{{ route('customer.logout') }}" id="logout-form" class="hidden">
-                        @csrf
-                    </form>
+
                     <a href="#"
                         class="nav-item logout flex items-center px-4 py-3 rounded-lg text-red-400 hover:bg-gray-800 transition-all duration-300"
                         onclick="event.preventDefault(); confirmLogout();">
@@ -101,7 +99,7 @@
                                 <i class="fas fa-wallet text-white text-xl"></i>
                             </div>
                             <div class="stat-info">
-                                <h3 class="text-2xl font-bold text-white">₹{{ number_format($totalSpent, 2) }}</h3>
+                                <h3 class="text-2xl font-bold text-white">₹{{ number_format($totalSpent) }}</h3>
                                 <p class="text-gray-300">Total Spent</p>
                             </div>
                         </div>
@@ -136,7 +134,7 @@
                                                         </span>
                                                     </div>
                                                     <div class="order-total">
-                                                        <p class="text-white font-bold">₹{{ number_format($order->grand_total, 2) }}</p>
+                                                        <p class="text-white font-bold">₹{{ number_format($order->grand_total) }}</p>
                                                         <p class="text-xs text-gray-400">{{ $order->items->count() }} items</p>
                                                     </div>
                                                     <div class="order-actions">
@@ -247,7 +245,7 @@
                                             </div>
                                             <div class="order-total">
                                                 <p class="text-white font-bold text-sm md:text-base">
-                                                    ₹{{ number_format($order->grand_total, 2) }}</p>
+                                                    ₹{{ number_format($order->grand_total) }}</p>
                                                 <p class="text-[10px] md:text-xs text-gray-400">{{ $order->items->count() }} items</p>
                                             </div>
                                             <div class="order-actions">
@@ -515,12 +513,7 @@
             }
         });
 
-        function confirmLogout() {
-            if (confirm('Are you sure you want to logout?')) {
-                document.getElementById('logout-form').submit();
-            }
-            return false;
-        }
+
 
         // Address Management logic
         const modal = document.getElementById('addressModal');

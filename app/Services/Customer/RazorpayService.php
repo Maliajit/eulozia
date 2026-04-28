@@ -60,7 +60,7 @@ class RazorpayService
 
             // Create Razorpay order
             $razorpayOrder = $this->razorpay->order->create([
-                'amount' => $amount * 100, // Convert to paise
+                'amount' => (int) round($amount * 100), // Convert to paise and ensure integer
                 'currency' => 'INR',
                 'receipt' => $order->order_number,
                 'payment_capture' => 1, // Auto capture
@@ -125,7 +125,7 @@ class RazorpayService
             ]);
 
             $order = $this->razorpay->order->create([
-                'amount' => $amountInPaise, // already in paise
+                'amount' => (int) $amountInPaise, // ensure integer
                 'currency' => 'INR',
                 'payment_capture' => 1,
             ]);

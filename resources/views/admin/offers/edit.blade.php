@@ -84,7 +84,7 @@
                         Maximum Discount Amount
                     </label>
                     <div class="relative">
-                        <span class="absolute left-3 top-3.5 text-gray-500">$</span>
+                        <span class="absolute left-3 top-3.5 text-gray-500">₹</span>
                         <input type="number" id="max_discount" name="max_discount" min="0" step="0.01"
                             class="w-full border border-gray-300 rounded-lg pl-8 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                             placeholder="50">
@@ -99,7 +99,7 @@
                     Discount Amount *
                 </label>
                 <div class="relative">
-                    <span class="absolute left-3 top-3.5 text-gray-500">$</span>
+                    <span class="absolute left-3 top-3.5 text-gray-500">₹</span>
                     <input type="number" id="discount_value_fixed" name="discount_value" min="0" step="0.01" required
                         class="w-full border border-gray-300 rounded-lg pl-8 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         placeholder="10">
@@ -152,7 +152,7 @@
                     Minimum Cart Amount
                 </label>
                 <div class="relative">
-                    <span class="absolute left-3 top-3.5 text-gray-500">$</span>
+                    <span class="absolute left-3 top-3.5 text-gray-500">₹</span>
                     <input type="number" id="min_cart_amount" name="min_cart_amount" min="0" step="0.01"
                         class="w-full border border-gray-300 rounded-lg pl-8 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         placeholder="0.00">
@@ -163,7 +163,7 @@
                     Maximum Cart Amount
                 </label>
                 <div class="relative">
-                    <span class="absolute left-3 top-3.5 text-gray-500">$</span>
+                    <span class="absolute left-3 top-3.5 text-gray-500">₹</span>
                     <input type="number" id="max_cart_amount" name="max_cart_amount" min="0" step="0.01"
                         class="w-full border border-gray-300 rounded-lg pl-8 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         placeholder="0.00">
@@ -460,7 +460,7 @@ function updateOfferFields() {
 // Load categories
 async function loadCategories() {
     try {
-        const response = await axiosInstance.get('/categories/dropdown');
+        const response = await axiosInstance.get('/categories/dropdown', { params: { tree: 0 } });
         if (response.data.success) {
             allCategories = response.data.data;
 
@@ -557,7 +557,7 @@ function renderProducts() {
                         <span class="text-sm text-gray-500 ml-2">SKU: ${product.sku}</span>
                     </div>
                 </div>
-                <span class="text-sm font-semibold text-gray-700">$${product.price}</span>
+                <span class="text-sm font-semibold text-gray-700">₹${product.price}</span>
             </div>
         `;
     });
@@ -673,17 +673,14 @@ async function saveOffer() {
     }
 
     // Add selected categories
-    const selectedCategories = [];
     document.querySelectorAll('input[name="categories[]"]:checked').forEach(checkbox => {
-        selectedCategories.push(checkbox.value);
+        formData.append('categories[]', checkbox.value);
     });
-    formData.append('categories', JSON.stringify(selectedCategories));
 
     // Add selected variants
-    const variantsInput = document.getElementById('variants');
-    if (variantsInput.value) {
-        formData.append('variants', variantsInput.value);
-    }
+    selectedVariants.forEach((variant, id) => {
+        formData.append('variants[]', id);
+    });
 
     // Show loading state
     const submitBtn = form.querySelector('button[type="submit"]');

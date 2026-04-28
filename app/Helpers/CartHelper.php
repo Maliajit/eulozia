@@ -7,6 +7,7 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Log;
 
 class CartHelper
 {
@@ -298,7 +299,8 @@ class CartHelper
                 'id' => $offer->id,
                 'code' => $offer->code,
                 'name' => $offer->name,
-                'type' => $offer->offer_type
+                'type' => $offer->offer_type,
+                'discount_value' => (float) $offer->discount_value
             ] : null,
             'is_logged_in' => Auth::guard('customer')->check()
         ];
@@ -320,7 +322,7 @@ class CartHelper
             if ($variant) {
                 // Update item unit price from variant to stay in sync
                 $item->unit_price = $variant->price;
-                $item->total = $item->unit_price * $item->quantity;
+                $item->total = (float) round($item->unit_price * $item->quantity);
                 $item->save();
             }
             $subtotal += $item->total;
@@ -350,7 +352,7 @@ class CartHelper
             if ($item->variant->product && $item->variant->product->taxClass) {
                 foreach ($item->variant->product->taxClass->rates as $rate) {
                     if ($rate->is_active) {
-                        $amount = $itemTotal * ($rate->rate / 100);
+                        $amount = (float) round($itemTotal * ($rate->rate / 100));
                         $taxTotal += $amount;
 
                         $label = $rate->name;
@@ -361,7 +363,7 @@ class CartHelper
                                 'amount' => 0
                             ];
                         }
-                        $taxBreakdown[$label]['amount'] += $amount;
+                        $taxBreakdown[$label]['amount'] = (float) round($taxBreakdown[$label]['amount'] + $amount);
                     }
                 }
             }
@@ -389,13 +391,13 @@ class CartHelper
         // Calculate shipping
         $shippingTotal = ($offer && $offer->offer_type === 'free_shipping') ? 0 : $this->calculateShipping($subtotal - $discountTotal);
 
-        $grandTotal = $subtotal - $discountTotal + $taxTotal + $shippingTotal;
+        $grandTotal = (float) round($subtotal - $discountTotal + $taxTotal + $shippingTotal);
 
         $cart->update([
-            'subtotal' => $subtotal,
-            'discount_total' => $discountTotal,
-            'tax_total' => $taxTotal,
-            'shipping_total' => $shippingTotal,
+            'subtotal' => (float) round($subtotal),
+            'discount_total' => (float) round($discountTotal),
+            'tax_total' => (float) round($taxTotal),
+            'shipping_total' => (float) round($shippingTotal),
             'grand_total' => $grandTotal
         ]);
     }
@@ -414,8 +416,8 @@ class CartHelper
         foreach ($cart['items'] as &$item) {
             $variant = ProductVariant::find($item['variant_id']);
             if ($variant) {
-                $item['unit_price'] = (float) $variant->price;
-                $item['total'] = $item['unit_price'] * $item['quantity'];
+                $item['unit_price'] = (float) round($variant->price);
+                $item['total'] = (float) round($item['unit_price'] * $item['quantity']);
                 // Refresh stock info while we're at it
                 $item['stock_quantity'] = $variant->stock_quantity;
             }
@@ -442,7 +444,7 @@ class CartHelper
             $rates = $item['tax_rates'] ?? [];
 
             foreach ($rates as $rate) {
-                $amount = $itemTotal * ($rate['rate'] / 100);
+                $amount = (float) round($itemTotal * ($rate['rate'] / 100));
                 $taxTotal += $amount;
 
                 $label = $rate['name'];
@@ -453,18 +455,18 @@ class CartHelper
                         'amount' => 0
                     ];
                 }
-                $taxBreakdown[$label]['amount'] += $amount;
+                $taxBreakdown[$label]['amount'] = (float) round($taxBreakdown[$label]['amount'] + $amount);
             }
         }
 
         $shippingTotal = isset($cart['offer_type']) && $cart['offer_type'] === 'free_shipping' ? 0 : $this->calculateShipping($subtotal - $discountTotal);
 
-        $cart['subtotal'] = round($subtotal, 2);
-        $cart['discount_total'] = round($discountTotal, 2);
-        $cart['tax_total'] = round($taxTotal, 2);
+        $cart['subtotal'] = (float) round($subtotal);
+        $cart['discount_total'] = (float) round($discountTotal);
+        $cart['tax_total'] = (float) round($taxTotal);
         $cart['tax_breakdown'] = array_values($taxBreakdown);
-        $cart['shipping_total'] = round($shippingTotal, 2);
-        $cart['grand_total'] = round($subtotal - $discountTotal + $taxTotal + $shippingTotal, 2);
+        $cart['shipping_total'] = (float) round($shippingTotal);
+        $cart['grand_total'] = (float) round($subtotal - $discountTotal + $taxTotal + $shippingTotal);
         $cart['items_count'] = $itemsCount;
 
         return $cart;
@@ -743,26 +745,45 @@ class CartHelper
     public function clearCart()
     {
         if (Auth::guard('customer')->check()) {
-            return $this->clearDatabaseCart();
+            return $this->clearCartByCustomerId(Auth::guard('customer')->id());
         }
 
         return $this->clearLocalCart();
     }
 
-    private function clearDatabaseCart()
+    public function clearCartByCustomerId($customerId)
     {
-        $customer = Auth::guard('customer')->user();
+        Log::info('Clearing cart for customer', ['customer_id' => $customerId]);
 
-        $cart = Cart::where('customer_id', $customer->id)
+        // Get all active carts for this customer (just in case there are duplicates)
+        $carts = Cart::where('customer_id', $customerId)
             ->where('status', 'active')
-            ->first();
+            ->get();
 
-        if ($cart) {
+        Log::info('Found active carts to clear', ['count' => $carts->count()]);
+
+        foreach ($carts as $cart) {
             $cart->items()->delete();
-            $this->recalculateCartTotals($cart);
+            // Explicitly reset totals to zero and remove offer
+            $cart->update([
+                'subtotal' => 0,
+                'discount_total' => 0,
+                'tax_total' => 0,
+                'shipping_total' => 0,
+                'grand_total' => 0,
+                'offer_id' => null
+            ]);
         }
 
+        // Also clear local cart cookie for guest synchronization
+        $this->clearLocalCart();
+
         return $this->createEmptyCartResponse();
+    }
+
+    private function clearDatabaseCart()
+    {
+        return $this->clearCartByCustomerId(Auth::guard('customer')->id());
     }
 
     public function applyCoupon($code)

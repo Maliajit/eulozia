@@ -1129,11 +1129,12 @@
                         formatter: function(cell) {
                             const row = cell.getRow();
                             const data = row.getData();
+                            const val = data.discount_value || 0;
 
                             if (data.offer_type === 'percentage') {
-                                return `<span class="font-bold text-emerald-600">${data.discount_value}%</span>`;
+                                return `<span class="font-bold text-emerald-600">${val}%</span>`;
                             } else if (data.offer_type === 'fixed') {
-                                return `<span class="font-bold text-emerald-600">₹${data.discount_value}</span>`;
+                                return `<span class="font-bold text-emerald-600">₹${val}</span>`;
                             } else if (data.offer_type === 'bogo' || data.offer_type === 'buy_x_get_y') {
                                 return `<span class="text-amber-600">${data.buy_qty || 1} → ${data.get_qty || 1}</span>`;
                             } else if (data.offer_type === 'free_shipping') {
@@ -1802,9 +1803,26 @@
             ];
             
             numericFields.forEach(field => {
-                const el = form.querySelector(`[name="${field}"]`);
-                if (el && el.value !== '') {
-                    payload[field] = el.value;
+                let val = '';
+                if (field === 'discount_value') {
+                    if (payload.offer_type === 'percentage') {
+                        val = document.getElementById('discount_value').value;
+                    } else if (payload.offer_type === 'fixed') {
+                        val = document.getElementById('discount_value_fixed').value;
+                    }
+                } else if (field === 'buy_qty' || field === 'get_qty') {
+                    if (payload.offer_type === 'bogo') {
+                        val = document.getElementById(field).value;
+                    } else if (payload.offer_type === 'buy_x_get_y') {
+                        val = document.getElementById(field + '_xy').value;
+                    }
+                } else {
+                    const el = form.querySelector(`[name="${field}"]`);
+                    if (el) val = el.value;
+                }
+                
+                if (val !== '') {
+                    payload[field] = val;
                 }
             });
             

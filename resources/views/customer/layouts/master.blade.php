@@ -56,6 +56,7 @@
     @include('customer.partials.cart-drawer')
     @include('customer.partials.login-modal')
     @include('customer.partials.signup-modal')
+    @include('customer.partials.logout-modal')
 
     @include('customer.partials.scripts')
     <script>

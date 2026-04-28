@@ -416,8 +416,8 @@
             // Load categories
             async function loadCategories() {
                 try {
-                    const response = await axiosInstance.get('/categories/dropdown');
-                    if (response.data.success) {
+                    const response = await axiosInstance.get('/categories/dropdown', { params: { tree: 0 } });
+                if (response.data.success) {
                         allCategories = response.data.data;
                         renderCategories();
                     }

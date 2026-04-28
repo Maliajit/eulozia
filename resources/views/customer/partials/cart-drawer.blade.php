@@ -48,6 +48,30 @@
     </div>
 </div>
 
+<!-- Confirmation Modal -->
+<div id="confirmModal" class="fixed inset-0 z-[60] hidden">
+    <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm"></div>
+    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-primary border border-gray-800 rounded-2xl p-6 shadow-2xl">
+        <div class="flex flex-col items-center text-center">
+            <div class="w-16 h-16 bg-red-500 bg-opacity-10 rounded-full flex items-center justify-center mb-4">
+                <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-secondary mb-2">Remove Item?</h3>
+            <p class="text-gray-400 mb-6">Are you sure you want to remove this item from your cart?</p>
+            <div class="flex space-x-3 w-full">
+                <button id="cancelConfirm" class="flex-1 px-4 py-3 bg-gray-800 text-secondary rounded-xl font-semibold hover:bg-gray-700 transition duration-300">
+                    Cancel
+                </button>
+                <button id="confirmRemove" class="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition duration-300">
+                    Remove
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     async function openCart() {
         const modal = document.getElementById('cartModal');
@@ -179,7 +203,49 @@
         }
     }
 
-    async function removeFromCart(itemId) {
+    let itemToRemove = null;
+
+    function removeFromCart(itemId) {
+        itemToRemove = itemId;
+        const confirmModal = document.getElementById('confirmModal');
+        confirmModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    document.getElementById('cancelConfirm').addEventListener('click', () => {
+        document.getElementById('confirmModal').classList.add('hidden');
+        if (!document.getElementById('cartModal').classList.contains('hidden')) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'auto';
+        }
+        itemToRemove = null;
+    });
+
+    document.getElementById('confirmRemove').addEventListener('click', async () => {
+        if (!itemToRemove) return;
+        
+        try {
+            const response = await axios.delete(`${baseUrl}/cart/remove/${itemToRemove}`);
+            if (response.data.success) {
+                renderCart(response.data.data.cart);
+                updateGlobalCount(response.data.data.cart_count);
+            }
+        } catch (error) {
+            console.error('Failed to remove item:', error);
+            if (typeof showToast === 'function') {
+                showToast('Failed to remove item', 'error');
+            }
+        } finally {
+            document.getElementById('confirmModal').classList.add('hidden');
+            itemToRemove = null;
+            if (document.getElementById('cartModal').classList.contains('hidden')) {
+                document.body.style.overflow = 'auto';
+            }
+        }
+    });
+
+    async function removeFromCartLegacy(itemId) {
         if (!confirm('Remove this item from cart?')) return;
         try {
             const response = await axios.delete(`${baseUrl}/cart/remove/${itemId}`);

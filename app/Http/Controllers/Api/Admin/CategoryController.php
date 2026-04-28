@@ -383,10 +383,16 @@ class CategoryController extends Controller
 
             $categories = $query->get();
 
-            // Build tree structure
-            $tree = $this->buildCategoryTree($categories);
+            $isTree = filter_var($request->get('tree', true), FILTER_VALIDATE_BOOLEAN);
 
-            return $this->apiResponse(true, $tree, 'Categories retrieved successfully');
+            if ($isTree) {
+                // Build tree structure
+                $data = $this->buildCategoryTree($categories);
+            } else {
+                $data = $categories;
+            }
+
+            return $this->apiResponse(true, $data, 'Categories retrieved successfully');
 
         } catch (\Exception $e) {
             \Log::error('Category dropdown error: ' . $e->getMessage());

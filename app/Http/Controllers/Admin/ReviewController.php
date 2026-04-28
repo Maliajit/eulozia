@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Review;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Admin Review Controller
@@ -46,9 +48,16 @@ class ReviewController extends Controller
             'status' => 'boolean',
         ]);
 
-        Review::create($request->all());
-
-        return redirect()->route('admin.reviews.index')->with('success', 'Review created successfully.');
+        DB::beginTransaction();
+        try {
+            Review::create($request->all());
+            DB::commit();
+            return redirect()->route('admin.reviews.index')->with('success', 'Review created successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Admin Review store error: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'An error occurred while creating the review. Please try again.');
+        }
     }
 
     public function edit(Review $review)
@@ -67,14 +76,29 @@ class ReviewController extends Controller
             'status' => 'boolean',
         ]);
 
-        $review->update($request->all());
-
-        return redirect()->route('admin.reviews.index')->with('success', 'Review updated successfully.');
+        DB::beginTransaction();
+        try {
+            $review->update($request->all());
+            DB::commit();
+            return redirect()->route('admin.reviews.index')->with('success', 'Review updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Admin Review update error: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'An error occurred while updating the review. Please try again.');
+        }
     }
 
     public function destroy(Review $review)
     {
-        $review->delete();
-        return redirect()->route('admin.reviews.index')->with('success', 'Review deleted successfully.');
+        DB::beginTransaction();
+        try {
+            $review->delete();
+            DB::commit();
+            return redirect()->route('admin.reviews.index')->with('success', 'Review deleted successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Admin Review delete error: ' . $e->getMessage());
+            return back()->with('error', 'An error occurred while deleting the review. Please try again.');
+        }
     }
 }

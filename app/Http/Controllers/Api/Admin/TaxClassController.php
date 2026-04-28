@@ -34,15 +34,17 @@ class TaxClassController extends Controller
             $sortBy = $request->get('sort_by', 'created_at');
             $sortDir = $request->get('sort_dir', 'desc');
 
-            $query = TaxClass::with(['rates' => function($q) {
-                $q->where('is_active', true);
-            }])->withCount(['rates', 'products']);
+            $query = TaxClass::with([
+                'rates' => function ($q) {
+                    $q->where('is_active', true);
+                }
+            ])->withCount(['rates', 'products']);
 
             if ($search) {
-                $query->where(function($q) use ($search) {
+                $query->where(function ($q) use ($search) {
                     $q->where('name', 'LIKE', "%{$search}%")
-                      ->orWhere('code', 'LIKE', "%{$search}%")
-                      ->orWhere('description', 'LIKE', "%{$search}%");
+                        ->orWhere('code', 'LIKE', "%{$search}%")
+                        ->orWhere('description', 'LIKE', "%{$search}%");
                 });
             }
 
@@ -81,7 +83,7 @@ class TaxClassController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Tax class index error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to retrieve tax classes', 500);
+            return $this->apiResponse(false, null, 'An error occurred while retrieving tax classes. Please try again.', 500);
         }
     }
 
@@ -107,10 +109,10 @@ class TaxClassController extends Controller
 
             // Attach tax rates if provided
             if ($request->has('tax_rate_ids') && is_array($request->tax_rate_ids)) {
-if ($request->filled('tax_rate_ids')) {
-    TaxRate::whereIn('id', $request->tax_rate_ids)
-        ->update(['tax_class_id' => $taxClass->id]);
-}
+                if ($request->filled('tax_rate_ids')) {
+                    TaxRate::whereIn('id', $request->tax_rate_ids)
+                        ->update(['tax_class_id' => $taxClass->id]);
+                }
             }
 
             DB::commit();
@@ -125,7 +127,7 @@ if ($request->filled('tax_rate_ids')) {
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Tax class store error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to create tax class', 500);
+            return $this->apiResponse(false, null, 'An error occurred while creating the tax class. Please try again.', 500);
         }
     }
 
@@ -135,9 +137,11 @@ if ($request->filled('tax_rate_ids')) {
     public function show($id): JsonResponse
     {
         try {
-            $taxClass = TaxClass::with(['rates' => function($q) {
-                $q->orderBy('priority', 'asc');
-            }])->withCount(['rates', 'products'])->find($id);
+            $taxClass = TaxClass::with([
+                'rates' => function ($q) {
+                    $q->orderBy('priority', 'asc');
+                }
+            ])->withCount(['rates', 'products'])->find($id);
 
             if (!$taxClass) {
                 return $this->apiResponse(false, null, 'Tax class not found', 404);
@@ -172,7 +176,7 @@ if ($request->filled('tax_rate_ids')) {
 
         } catch (\Exception $e) {
             \Log::error('Tax class show error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to retrieve tax class', 500);
+            return $this->apiResponse(false, null, 'An error occurred while retrieving the tax class.', 500);
         }
     }
 
@@ -202,10 +206,10 @@ if ($request->filled('tax_rate_ids')) {
 
             // Update tax rates if provided
             if ($request->has('tax_rate_ids') && is_array($request->tax_rate_ids)) {
-if ($request->filled('tax_rate_ids')) {
-    TaxRate::whereIn('id', $request->tax_rate_ids)
-        ->update(['tax_class_id' => $taxClass->id]);
-}
+                if ($request->filled('tax_rate_ids')) {
+                    TaxRate::whereIn('id', $request->tax_rate_ids)
+                        ->update(['tax_class_id' => $taxClass->id]);
+                }
             }
 
             DB::commit();
@@ -220,7 +224,7 @@ if ($request->filled('tax_rate_ids')) {
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Tax class update error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to update tax class', 500);
+            return $this->apiResponse(false, null, 'An error occurred while updating the tax class. Please try again.', 500);
         }
     }
 
@@ -229,6 +233,7 @@ if ($request->filled('tax_rate_ids')) {
      */
     public function destroy($id): JsonResponse
     {
+        DB::beginTransaction();
         try {
             $taxClass = TaxClass::find($id);
 
@@ -248,11 +253,13 @@ if ($request->filled('tax_rate_ids')) {
 
             $taxClass->delete();
 
+            DB::commit();
             return $this->apiResponse(true, null, 'Tax class deleted successfully');
 
         } catch (\Exception $e) {
+            DB::rollBack();
             \Log::error('Tax class delete error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to delete tax class', 500);
+            return $this->apiResponse(false, null, 'An error occurred while deleting the tax class.', 500);
         }
     }
 
@@ -280,7 +287,7 @@ if ($request->filled('tax_rate_ids')) {
 
         } catch (\Exception $e) {
             \Log::error('Tax class statistics error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to retrieve statistics', 500);
+            return $this->apiResponse(false, null, 'An error occurred while retrieving statistics.', 500);
         }
     }
 
@@ -323,7 +330,7 @@ if ($request->filled('tax_rate_ids')) {
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Tax class toggle default error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to update default status', 500);
+            return $this->apiResponse(false, null, 'An error occurred while updating default status. Please try again.', 500);
         }
     }
 
@@ -332,6 +339,7 @@ if ($request->filled('tax_rate_ids')) {
      */
     public function bulkDelete(Request $request): JsonResponse
     {
+        DB::beginTransaction();
         try {
             $request->validate([
                 'ids' => 'required|array',
@@ -358,13 +366,15 @@ if ($request->filled('tax_rate_ids')) {
 
             $deleted = TaxClass::whereIn('id', $request->ids)->delete();
 
+            DB::commit();
             return $this->apiResponse(true, [
                 'deleted_count' => $deleted,
             ], "{$deleted} tax class(es) deleted successfully");
 
         } catch (\Exception $e) {
+            DB::rollBack();
             \Log::error('Tax class bulk delete error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to delete tax classes', 500);
+            return $this->apiResponse(false, null, 'An error occurred while deleting tax classes.', 500);
         }
     }
 
@@ -391,7 +401,7 @@ if ($request->filled('tax_rate_ids')) {
 
         } catch (\Exception $e) {
             \Log::error('Tax class dropdown error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to retrieve tax classes', 500);
+            return $this->apiResponse(false, null, 'An error occurred while retrieving tax classes.', 500);
         }
     }
 }

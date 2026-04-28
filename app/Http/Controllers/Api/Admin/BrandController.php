@@ -9,6 +9,7 @@ use App\Models\Media;
 use App\Models\SeoMetadata;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -124,6 +125,7 @@ class BrandController extends Controller
      */
     public function store(BrandRequest $request): JsonResponse
     {
+        DB::beginTransaction();
         try {
             $data = $request->validated();
 
@@ -178,6 +180,8 @@ class BrandController extends Controller
                 ]);
             }
 
+            DB::commit();
+
             // Load relationships for response
             $brand->load(['logo']);
 
@@ -191,8 +195,9 @@ class BrandController extends Controller
             ], 'Brand created successfully', 201);
 
         } catch (\Exception $e) {
+            DB::rollBack();
             \Log::error('Brand store error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to create brand', 500);
+            return $this->apiResponse(false, null, 'An error occurred while creating the brand. Please try again.', 500);
         }
     }
 
@@ -243,6 +248,7 @@ class BrandController extends Controller
      */
     public function update(BrandRequest $request, $id): JsonResponse
     {
+        DB::beginTransaction();
         try {
             $brand = Brand::find($id);
 
@@ -324,6 +330,8 @@ class BrandController extends Controller
                 );
             }
 
+            DB::commit();
+
             // Load relationships for response
             $brand->load(['logo']);
 
@@ -337,8 +345,9 @@ class BrandController extends Controller
             ], 'Brand updated successfully');
 
         } catch (\Exception $e) {
+            DB::rollBack();
             \Log::error('Brand update error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to update brand', 500);
+            return $this->apiResponse(false, null, 'An error occurred while updating the brand. Please try again.', 500);
         }
     }
 
@@ -347,6 +356,7 @@ class BrandController extends Controller
      */
     public function destroy($id): JsonResponse
     {
+        DB::beginTransaction();
         try {
             $brand = Brand::find($id);
 
@@ -371,11 +381,14 @@ class BrandController extends Controller
             // Delete brand
             $brand->delete();
 
+            DB::commit();
+
             return $this->apiResponse(true, null, 'Brand deleted successfully');
 
         } catch (\Exception $e) {
+            DB::rollBack();
             \Log::error('Brand delete error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to delete brand', 500);
+            return $this->apiResponse(false, null, 'An error occurred while deleting the brand. Please try again.', 500);
         }
     }
 
@@ -510,7 +523,7 @@ class BrandController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Bulk status update error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to update status', 500);
+            return $this->apiResponse(false, null, 'An error occurred while updating the status of the selected brands.', 500);
         }
     }
 
@@ -537,7 +550,7 @@ class BrandController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Bulk featured update error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to update featured status', 500);
+            return $this->apiResponse(false, null, 'An error occurred while updating the featured status of the selected brands.', 500);
         }
     }
 
@@ -546,6 +559,7 @@ class BrandController extends Controller
      */
     public function bulkDelete(Request $request): JsonResponse
     {
+        DB::beginTransaction();
         try {
             $request->validate([
                 'ids' => 'required|array',
@@ -558,13 +572,13 @@ class BrandController extends Controller
                 ->count();
 
             if ($brandsWithProducts > 0) {
-                return $this->apiResponse(false, null, "Cannot delete {$brandsWithProducts} brand(s) that have associated products", 400);
+                return $this->apiResponse(false, null, "Cannot delete {$brandsWithProducts} brand(s) that have associated products. Please reassign products first.", 400);
             }
 
             // Get brands with logos to delete files
             $brands = Brand::with('logo')->whereIn('id', $request->ids)->get();
 
-            // Delete logos
+            // Delete logos and metadata
             foreach ($brands as $brand) {
                 if ($brand->logo) {
                     Storage::disk('public')->delete($brand->logo->file_path);
@@ -576,13 +590,16 @@ class BrandController extends Controller
             // Delete brands
             $deleted = Brand::whereIn('id', $request->ids)->delete();
 
+            DB::commit();
+
             return $this->apiResponse(true, [
                 'deleted_count' => $deleted,
             ], "{$deleted} brand(s) deleted successfully");
 
         } catch (\Exception $e) {
+            DB::rollBack();
             \Log::error('Bulk delete error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to delete brands', 500);
+            return $this->apiResponse(false, null, 'An error occurred while deleting the selected brands. Please try again.', 500);
         }
     }
 

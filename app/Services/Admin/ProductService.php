@@ -78,13 +78,14 @@ class ProductService
 
         } catch (QueryException $e) {
             DB::rollBack();
-            $errorMessage = $e->getMessage();
+            $errorMessage = "An error occurred while saving the product details.";
 
             // Handle duplicate entry error (1062)
-            if ($e->errorInfo[1] == 1062) {
-                if (str_contains($errorMessage, 'products_product_code_unique')) {
+            if (isset($e->errorInfo[1]) && $e->errorInfo[1] == 1062) {
+                $rawMessage = $e->getMessage();
+                if (str_contains($rawMessage, 'products_product_code_unique')) {
                     $errorMessage = "The product code you entered already exists.";
-                } elseif (str_contains($errorMessage, 'product_variants_sku_unique')) {
+                } elseif (str_contains($rawMessage, 'product_variants_sku_unique')) {
                     $errorMessage = "The SKU entered already exists.";
                 } else {
                     $errorMessage = "A duplicate entry was detected. Please check your data.";
@@ -111,7 +112,7 @@ class ProductService
 
             return [
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => 'Something went wrong while creating the product. Please try again.'
             ];
         }
     }
@@ -324,13 +325,14 @@ class ProductService
 
         } catch (QueryException $e) {
             DB::rollBack();
-            $errorMessage = $e->getMessage();
+            $errorMessage = "An error occurred while updating the product.";
 
             // Handle duplicate entry error (1062)
-            if ($e->errorInfo[1] == 1062) {
-                if (str_contains($errorMessage, 'products_product_code_unique')) {
+            if (isset($e->errorInfo[1]) && $e->errorInfo[1] == 1062) {
+                $rawMessage = $e->getMessage();
+                if (str_contains($rawMessage, 'products_product_code_unique')) {
                     $errorMessage = "The product code you entered already exists.";
-                } elseif (str_contains($errorMessage, 'product_variants_sku_unique')) {
+                } elseif (str_contains($rawMessage, 'product_variants_sku_unique')) {
                     $errorMessage = "The SKU entered already exists.";
                 } else {
                     $errorMessage = "A duplicate entry was detected. Please check your data.";
@@ -359,7 +361,7 @@ class ProductService
 
             return [
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => 'Something went wrong while updating the product. Please try again.'
             ];
         }
     }

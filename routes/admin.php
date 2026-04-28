@@ -21,6 +21,9 @@ use App\Http\Controllers\Admin\BannerController as AdminBanner;
 use App\Http\Controllers\Admin\HomeSectionController as AdminHomeSection;
 use App\Http\Controllers\Api\Admin\AttributeController as ApiAttribute;
 use App\Http\Controllers\Api\Admin\AttributeValueController as ApiAttributeValue;
+use App\Http\Controllers\Api\Admin\BrandController as ApiBrand;
+use App\Http\Controllers\Api\Admin\TaxClassController as ApiTaxClass;
+use App\Http\Controllers\Api\Admin\TaxRateController as ApiTaxRate;
 
 Route::prefix('admin')->group(function () {
 
@@ -78,6 +81,18 @@ Route::prefix('admin')->group(function () {
         */
         Route::prefix('brands')->group(function () {
             Route::get('/', [AdminBrand::class, 'index'])->name('admin.brands.index');
+            Route::get('/data', [AdminBrand::class, 'getData'])->name('admin.brands.data');
+            Route::get('/statistics', [AdminBrand::class, 'statistics'])->name('admin.brands.statistics');
+            Route::post('/bulk-delete', [AdminBrand::class, 'bulkDelete'])->name('admin.brands.bulk-delete');
+            Route::post('/bulk-status', [AdminBrand::class, 'bulkStatus'])->name('admin.brands.bulk-status');
+
+            Route::post('/', [AdminBrand::class, 'store'])->name('admin.brands.store');
+            Route::get('/create', [AdminBrand::class, 'create'])->name('admin.brands.create');
+
+            Route::get('/{id}/edit', [AdminBrand::class, 'edit'])->name('admin.brands.edit');
+            Route::put('/{id}', [AdminBrand::class, 'update'])->name('admin.brands.update');
+            Route::delete('/{id}', [AdminBrand::class, 'destroy'])->name('admin.brands.destroy');
+            Route::post('/{id}/toggle-status', [AdminBrand::class, 'toggleStatus'])->name('admin.brands.toggle-status');
         });
 
         /*
@@ -261,7 +276,7 @@ Route::prefix('admin')->group(function () {
         | PAGES MANAGEMENT
         |--------------------------------------------------------------------------
         */
-        Route::resource('pages', App\Http\Controllers\Admin\PageController::class, ['as' => 'admin']);
+        // Route::resource('pages', App\Http\Controllers\Admin\PageController::class, ['as' => 'admin']);
         Route::resource('reviews', App\Http\Controllers\Admin\ReviewController::class, ['as' => 'admin']);
         Route::resource('testimonials', App\Http\Controllers\Admin\TestimonialController::class, ['as' => 'admin']);
 
@@ -311,5 +326,54 @@ Route::prefix('api/admin')->middleware(['web', 'admin.api.auth'])->group(functio
             Route::post('/bulk-update', [ApiAttributeValue::class, 'bulkUpdate']);
             Route::post('/bulk-delete', [ApiAttributeValue::class, 'bulkDelete']);
         });
+    });
+
+    // Brand Routes
+    Route::prefix('brands')->group(function () {
+        Route::get('/', [ApiBrand::class, 'index']);
+        Route::get('/dropdown', [ApiBrand::class, 'dropdown']);
+        Route::get('/statistics', [ApiBrand::class, 'statistics']);
+        Route::post('/', [ApiBrand::class, 'store']);
+        Route::get('/{id}', [ApiBrand::class, 'show']);
+        Route::put('/{id}', [ApiBrand::class, 'update']);
+        Route::delete('/{id}', [ApiBrand::class, 'destroy']);
+
+        // Status operations
+        Route::post('/{id}/update-status', [ApiBrand::class, 'updateStatus']);
+        Route::post('/{id}/update-featured', [ApiBrand::class, 'updateFeatured']);
+
+        // Bulk operations
+        Route::post('/bulk-status', [ApiBrand::class, 'bulkStatus']);
+        Route::post('/bulk-featured', [ApiBrand::class, 'bulkFeatured']);
+        Route::post('/bulk-delete', [ApiBrand::class, 'bulkDelete']);
+    });
+
+    // Tax Class Routes
+    Route::prefix('tax-classes')->group(function () {
+        Route::get('/', [ApiTaxClass::class, 'index']);
+        Route::get('/dropdown', [ApiTaxClass::class, 'dropdown']);
+        Route::get('/statistics', [ApiTaxClass::class, 'statistics']);
+        Route::post('/', [ApiTaxClass::class, 'store']);
+        Route::get('/{id}', [ApiTaxClass::class, 'show']);
+        Route::put('/{id}', [ApiTaxClass::class, 'update']);
+        Route::delete('/{id}', [ApiTaxClass::class, 'destroy']);
+        Route::post('/{id}/toggle-default', [ApiTaxClass::class, 'toggleDefault']);
+        Route::post('/bulk-delete', [ApiTaxClass::class, 'bulkDelete']);
+    });
+
+    // Tax Rate Routes
+    Route::prefix('tax-rates')->group(function () {
+        Route::get('/', [ApiTaxRate::class, 'index']);
+        Route::get('/statistics', [ApiTaxRate::class, 'statistics']);
+        Route::get('/types', [ApiTaxRate::class, 'types']);
+        Route::get('/scopes', [ApiTaxRate::class, 'scopes']);
+        Route::post('/', [ApiTaxRate::class, 'store']);
+        Route::get('/{id}', [ApiTaxRate::class, 'show']);
+        Route::put('/{id}', [ApiTaxRate::class, 'update']);
+        Route::delete('/{id}', [ApiTaxRate::class, 'destroy']);
+        Route::post('/{id}/toggle-status', [ApiTaxRate::class, 'toggleStatus']);
+        Route::post('/bulk-delete', [ApiTaxRate::class, 'bulkDelete']);
+        Route::post('/bulk-status', [ApiTaxRate::class, 'bulkStatus']);
+        Route::post('/calculate', [ApiTaxRate::class, 'calculate']);
     });
 });

@@ -18,26 +18,29 @@ class CategoryController extends Controller
 
     public function getData(Request $request)
     {
-        $query = Category::withCount('products')->with('parent', 'image');
+        try {
+            $query = Category::withCount('products')->with('parent', 'image');
 
-        if ($request->filled('sort')) {
-            $query->orderBy($request->sort, $request->direction ?? 'asc');
-        } else {
-            $query->orderBy('sort_order', 'asc');
+            if ($request->filled('sort')) {
+                $query->orderBy($request->sort, $request->direction ?? 'asc');
+            } else {
+                $query->orderBy('sort_order', 'asc');
+            }
+
+            $perPage = $request->per_page ?? 10;
+            $categories = $query->paginate($perPage);
+
+            return response()->json([
+                'success' => true,
+                'data' => $categories
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching category data: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while fetching category data.'
+            ], 500);
         }
-
-        if ($request->filled('search')) { // Filter by name/slug/description if searching
-            $search = $request->search;
-            // Tabulator might send filters as array, or we can handle simple search
-        }
-
-        $perPage = $request->per_page ?? 10;
-        $categories = $query->paginate($perPage);
-
-        return response()->json([
-            'success' => true,
-            'data' => $categories
-        ]);
     }
 
     public function create()
@@ -53,13 +56,19 @@ class CategoryController extends Controller
             'parent_id' => 'nullable|exists:categories,id',
             'sort_order' => 'integer|min:0',
             'status' => 'boolean',
-            'image_id' => 'nullable|integer', // Assuming media library returns ID
-            // Add other fields validation
+            'image_id' => 'nullable|integer',
         ]);
 
-        $category = Category::create($request->all());
-
-        return response()->json(['success' => true, 'message' => 'Category created successfully', 'data' => $category]);
+        try {
+            $category = Category::create($request->all());
+            return response()->json(['success' => true, 'message' => 'Category created successfully', 'data' => $category]);
+        } catch (\Exception $e) {
+            \Log::error('Error creating category: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while creating the category. Please try again.'
+            ], 500);
+        }
     }
 
     public function edit($id)
@@ -69,91 +78,143 @@ class CategoryController extends Controller
 
     public function show($id)
     {
-        $category = Category::with(['children', 'parent', 'image', 'attributes', 'specificationGroups'])->findOrFail($id);
+        try {
+            $category = Category::with(['children', 'parent', 'image', 'attributes', 'specificationGroups'])->findOrFail($id);
 
-        // Append spec_group_ids for frontend compatibility if needed
-        $category->spec_group_ids = $category->specificationGroups->pluck('id')->toArray();
+            // Append spec_group_ids for frontend compatibility if needed
+            $category->spec_group_ids = $category->specificationGroups->pluck('id')->toArray();
 
-        if (request()->wantsJson()) {
-            return response()->json(['success' => true, 'data' => $category]);
+            if (request()->wantsJson()) {
+                return response()->json(['success' => true, 'data' => $category]);
+            }
+            return view('admin.categories.show', ['id' => $id, 'category' => $category]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            if (request()->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Category not found.'], 404);
+            }
+            return redirect()->route('admin.categories.index')->with('error', 'Category not found.');
+        } catch (\Exception $e) {
+            \Log::error('Error showing category: ' . $e->getMessage());
+            if (request()->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'An error occurred while loading category details.'], 500);
+            }
+            return redirect()->route('admin.categories.index')->with('error', 'An error occurred while loading category details.');
         }
-        return view('admin.categories.show', ['id' => $id, 'category' => $category]);
     }
 
     public function update(Request $request, $id)
     {
-        $category = Category::findOrFail($id);
+        try {
+            $category = Category::findOrFail($id);
 
-        \Log::info("Updating category", [
-            'id' => $id,
-            'received_attributes' => $request->input('attributes'),
-            'received_spec_groups' => $request->input('spec_group_ids')
-        ]);
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'slug' => 'required|string|max:255|unique:categories,slug,' . $id,
+                'parent_id' => 'nullable|exists:categories,id',
+                'sort_order' => 'integer|min:0',
+                'status' => 'boolean',
+                'featured' => 'boolean',
+                'show_in_nav' => 'boolean',
+                'description' => 'nullable|string',
+                'image_id' => 'nullable|integer',
+                'meta_title' => 'nullable|string|max:255',
+                'meta_description' => 'nullable|string',
+                'meta_keywords' => 'nullable|string',
+                'spec_group_ids' => 'nullable|array',
+                'spec_group_ids.*' => 'exists:specification_groups,id',
+                'attributes' => 'nullable|array',
+                'attributes.*.is_required' => 'boolean',
+                'attributes.*.is_filterable' => 'boolean',
+                'attributes.*.sort_order' => 'integer|min:0',
+            ]);
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:categories,slug,' . $id,
-            'parent_id' => 'nullable|exists:categories,id',
-            'sort_order' => 'integer|min:0',
-            'status' => 'boolean',
-            'featured' => 'boolean',
-            'show_in_nav' => 'boolean',
-            'description' => 'nullable|string',
-            'image_id' => 'nullable|integer',
-            'meta_title' => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string',
-            'meta_keywords' => 'nullable|string',
-            'spec_group_ids' => 'nullable|array',
-            'spec_group_ids.*' => 'exists:specification_groups,id',
-            'attributes' => 'nullable|array',
-            'attributes.*.is_required' => 'boolean',
-            'attributes.*.is_filterable' => 'boolean',
-            'attributes.*.sort_order' => 'integer|min:0',
-        ]);
+            \DB::beginTransaction();
 
-        $category->update($request->all());
+            $category->update($request->all());
 
-        // Sync specification groups
-        if ($request->has('spec_group_ids')) {
-            $category->specificationGroups()->sync($request->input('spec_group_ids'));
-        }
-
-        // Sync attributes with pivot data
-        if ($request->has('attributes')) {
-            $syncData = [];
-            $attributes = $request->input('attributes');
-            foreach ($attributes as $attrId => $pivotData) {
-                $syncData[$attrId] = [
-                    'is_required' => $pivotData['is_required'] ?? 0,
-                    'is_filterable' => $pivotData['is_filterable'] ?? 0,
-                    'sort_order' => $pivotData['sort_order'] ?? 0,
-                ];
+            // Sync specification groups
+            if ($request->has('spec_group_ids')) {
+                $category->specificationGroups()->sync($request->input('spec_group_ids'));
             }
-            $syncResult = $category->attributes()->sync($syncData);
-            \Log::info("Attributes sync results", ['result' => $syncResult]);
-        } else {
-            // If attributes key is missing, should we clear them?
-            // Usually yes if we want to allow removing all attributes
-            $category->attributes()->sync([]);
-            \Log::info("Attributes cleared (none received)");
-        }
 
-        return response()->json(['success' => true, 'message' => 'Category updated successfully', 'data' => $category]);
+            // Sync attributes with pivot data
+            if ($request->has('attributes')) {
+                $syncData = [];
+                $attributes = $request->input('attributes');
+                foreach ($attributes as $attrId => $pivotData) {
+                    $syncData[$attrId] = [
+                        'is_required' => $pivotData['is_required'] ?? 0,
+                        'is_filterable' => $pivotData['is_filterable'] ?? 0,
+                        'sort_order' => $pivotData['sort_order'] ?? 0,
+                    ];
+                }
+                $category->attributes()->sync($syncData);
+            } else {
+                $category->attributes()->sync([]);
+            }
+
+            \DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Category updated successfully', 'data' => $category]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['success' => false, 'message' => 'Category not found.'], 404);
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Error updating category: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while updating the category. Please try again.'
+            ], 500);
+        }
     }
 
     public function destroy($id)
     {
-        $category = Category::findOrFail($id);
-        // Check if has products or children?
-        $category->delete();
-        return response()->json(['success' => true, 'message' => 'Category deleted successfully']);
+        try {
+            $category = Category::findOrFail($id);
+
+            // Check if has products or children
+            if ($category->children()->exists()) {
+                return response()->json(['success' => false, 'message' => 'Cannot delete category. It has sub-categories.'], 400);
+            }
+
+            if ($category->products()->exists()) {
+                return response()->json(['success' => false, 'message' => 'Cannot delete category. It has associated products.'], 400);
+            }
+
+            $category->delete();
+            return response()->json(['success' => true, 'message' => 'Category deleted successfully']);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['success' => false, 'message' => 'Category not found.'], 404);
+        } catch (\Exception $e) {
+            \Log::error('Error deleting category: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while deleting the category. Please try again.'
+            ], 500);
+        }
     }
 
     public function bulkDelete(Request $request)
     {
-        $ids = $request->ids;
-        Category::whereIn('id', $ids)->delete();
-        return response()->json(['success' => true, 'data' => ['deleted_count' => count($ids)]]);
+        try {
+            $ids = $request->ids;
+            if (empty($ids)) {
+                return response()->json(['success' => false, 'message' => 'No categories selected.'], 400);
+            }
+
+            // Optional: Check for dependencies before bulk deleting?
+            // For now, simple bulk delete but wrapped in try-catch.
+            $deletedCount = Category::whereIn('id', $ids)->delete();
+
+            return response()->json(['success' => true, 'data' => ['deleted_count' => $deletedCount]]);
+        } catch (\Exception $e) {
+            \Log::error('Error in bulk category deletion: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while performing bulk deletion.'
+            ], 500);
+        }
     }
 
     public function getDropdown(Request $request)
@@ -168,31 +229,52 @@ class CategoryController extends Controller
 
     public function statistics()
     {
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'total_categories' => Category::count(),
-                'active_categories' => Category::where('status', 1)->count(), // Assuming status 1 is active
-                'main_categories' => Category::whereNull('parent_id')->count(),
-                'popular_category' => Category::withCount('products')->orderByDesc('products_count')->first()
-            ]
-        ]);
+        try {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'total_categories' => Category::count(),
+                    'active_categories' => Category::where('status', 1)->count(),
+                    'main_categories' => Category::whereNull('parent_id')->count(),
+                    'popular_category' => Category::withCount('products')->orderByDesc('products_count')->first()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching category statistics: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Error fetching statistics.'], 500);
+        }
     }
 
     public function toggleStatus(Request $request, $id)
     {
-        $category = Category::findOrFail($id);
-        $category->status = !$category->status;
-        $category->save();
-        return response()->json(['success' => true, 'message' => 'Status updated']);
+        try {
+            $category = Category::findOrFail($id);
+            $category->status = !$category->status;
+            $category->save();
+            return response()->json(['success' => true, 'message' => 'Status updated']);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['success' => false, 'message' => 'Category not found.'], 404);
+        } catch (\Exception $e) {
+            \Log::error('Error toggling category status: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Error updating status.'], 500);
+        }
     }
 
     public function bulkStatus(Request $request)
     {
-        $ids = $request->ids;
-        $status = $request->status;
-        Category::whereIn('id', $ids)->update(['status' => $status]);
-        return response()->json(['success' => true, 'message' => 'Status updated for selected categories']);
+        try {
+            $ids = $request->ids;
+            $status = $request->status;
+            if (empty($ids)) {
+                return response()->json(['success' => false, 'message' => 'No categories selected.'], 400);
+            }
+
+            Category::whereIn('id', $ids)->update(['status' => $status]);
+            return response()->json(['success' => true, 'message' => 'Status updated for selected categories']);
+        } catch (\Exception $e) {
+            \Log::error('Error in bulk category status update: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Error updating statuses.'], 500);
+        }
     }
 
     public function getAttributesDropdown()

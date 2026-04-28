@@ -88,7 +88,7 @@ class TaxRateController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Tax rate index error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to retrieve tax rates', 500);
+            return $this->apiResponse(false, null, 'An error occurred while retrieving tax rates.', 500);
         }
     }
 
@@ -97,12 +97,14 @@ class TaxRateController extends Controller
      */
     public function store(TaxRateRequest $request): JsonResponse
     {
+        DB::beginTransaction();
         try {
             $data = $request->validated();
             $data['is_active'] = $request->has('is_active') ? (bool) $request->is_active : true;
 
             $taxRate = TaxRate::create($data);
 
+            DB::commit();
             return $this->apiResponse(true, [
                 'id' => $taxRate->id,
                 'name' => $taxRate->name,
@@ -112,8 +114,9 @@ class TaxRateController extends Controller
             ], 'Tax rate created successfully', 201);
 
         } catch (\Exception $e) {
+            DB::rollBack();
             \Log::error('Tax rate store error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to create tax rate', 500);
+            return $this->apiResponse(false, null, 'An error occurred while creating the tax rate.', 500);
         }
     }
 
@@ -148,7 +151,7 @@ class TaxRateController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Tax rate show error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to retrieve tax rate', 500);
+            return $this->apiResponse(false, null, 'An error occurred while retrieving the tax rate.', 500);
         }
     }
 
@@ -157,6 +160,7 @@ class TaxRateController extends Controller
      */
     public function update(TaxRateRequest $request, $id): JsonResponse
     {
+        DB::beginTransaction();
         try {
             $taxRate = TaxRate::find($id);
 
@@ -169,6 +173,7 @@ class TaxRateController extends Controller
 
             $taxRate->update($data);
 
+            DB::commit();
             return $this->apiResponse(true, [
                 'id' => $taxRate->id,
                 'name' => $taxRate->name,
@@ -178,8 +183,9 @@ class TaxRateController extends Controller
             ], 'Tax rate updated successfully');
 
         } catch (\Exception $e) {
+            DB::rollBack();
             \Log::error('Tax rate update error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to update tax rate', 500);
+            return $this->apiResponse(false, null, 'An error occurred while updating the tax rate.', 500);
         }
     }
 
@@ -188,6 +194,7 @@ class TaxRateController extends Controller
      */
     public function destroy($id): JsonResponse
     {
+        DB::beginTransaction();
         try {
             $taxRate = TaxRate::find($id);
 
@@ -197,11 +204,13 @@ class TaxRateController extends Controller
 
             $taxRate->delete();
 
+            DB::commit();
             return $this->apiResponse(true, null, 'Tax rate deleted successfully');
 
         } catch (\Exception $e) {
+            DB::rollBack();
             \Log::error('Tax rate delete error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to delete tax rate', 500);
+            return $this->apiResponse(false, null, 'An error occurred while deleting the tax rate.', 500);
         }
     }
 
@@ -242,7 +251,7 @@ class TaxRateController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Tax rate statistics error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to retrieve statistics', 500);
+            return $this->apiResponse(false, null, 'An error occurred while retrieving statistics.', 500);
         }
     }
 
@@ -251,6 +260,7 @@ class TaxRateController extends Controller
      */
     public function toggleStatus(Request $request, $id): JsonResponse
     {
+        DB::beginTransaction();
         try {
             $taxRate = TaxRate::find($id);
 
@@ -262,14 +272,16 @@ class TaxRateController extends Controller
                 'is_active' => !$taxRate->is_active
             ]);
 
+            DB::commit();
             return $this->apiResponse(true, [
                 'id' => $taxRate->id,
                 'is_active' => $taxRate->is_active,
             ], 'Tax rate status updated successfully');
 
         } catch (\Exception $e) {
+            DB::rollBack();
             \Log::error('Tax rate toggle status error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to update status', 500);
+            return $this->apiResponse(false, null, 'An error occurred while updating status.', 500);
         }
     }
 
@@ -278,6 +290,7 @@ class TaxRateController extends Controller
      */
     public function bulkDelete(Request $request): JsonResponse
     {
+        DB::beginTransaction();
         try {
             $request->validate([
                 'ids' => 'required|array',
@@ -286,13 +299,15 @@ class TaxRateController extends Controller
 
             $deleted = TaxRate::whereIn('id', $request->ids)->delete();
 
+            DB::commit();
             return $this->apiResponse(true, [
                 'deleted_count' => $deleted,
             ], "{$deleted} tax rate(s) deleted successfully");
 
         } catch (\Exception $e) {
+            DB::rollBack();
             \Log::error('Tax rate bulk delete error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to delete tax rates', 500);
+            return $this->apiResponse(false, null, 'An error occurred while deleting tax rates.', 500);
         }
     }
 
@@ -301,6 +316,7 @@ class TaxRateController extends Controller
      */
     public function bulkStatus(Request $request): JsonResponse
     {
+        DB::beginTransaction();
         try {
             $request->validate([
                 'ids' => 'required|array',
@@ -311,13 +327,15 @@ class TaxRateController extends Controller
             $updated = TaxRate::whereIn('id', $request->ids)
                 ->update(['is_active' => $request->is_active]);
 
+            DB::commit();
             return $this->apiResponse(true, [
                 'updated_count' => $updated,
             ], "{$updated} tax rate(s) status updated successfully");
 
         } catch (\Exception $e) {
+            DB::rollBack();
             \Log::error('Tax rate bulk status error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to update status', 500);
+            return $this->apiResponse(false, null, 'An error occurred while updating status.', 500);
         }
     }
 
@@ -336,7 +354,7 @@ class TaxRateController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Tax rate types error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to retrieve tax types', 500);
+            return $this->apiResponse(false, null, 'An error occurred while retrieving tax types.', 500);
         }
     }
 
@@ -357,7 +375,7 @@ class TaxRateController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Tax rate scopes error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to retrieve tax scopes', 500);
+            return $this->apiResponse(false, null, 'An error occurred while retrieving tax scopes.', 500);
         }
     }
 
@@ -419,7 +437,7 @@ class TaxRateController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Tax calculate error: ' . $e->getMessage());
-            return $this->apiResponse(false, null, 'Failed to calculate tax', 500);
+            return $this->apiResponse(false, null, 'An error occurred while calculating tax.', 500);
         }
     }
 }

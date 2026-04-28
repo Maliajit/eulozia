@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Testimonial;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Admin Testimonial Controller
@@ -42,9 +44,16 @@ class TestimonialController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        Testimonial::create($request->all());
-
-        return redirect()->route('admin.testimonials.index')->with('success', 'Testimonial created successfully.');
+        DB::beginTransaction();
+        try {
+            Testimonial::create($request->all());
+            DB::commit();
+            return redirect()->route('admin.testimonials.index')->with('success', 'Testimonial created successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Admin Testimonial store error: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'An error occurred while creating the testimonial. Please try again.');
+        }
     }
 
     public function edit(Testimonial $testimonial)
@@ -62,14 +71,29 @@ class TestimonialController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $testimonial->update($request->all());
-
-        return redirect()->route('admin.testimonials.index')->with('success', 'Testimonial updated successfully.');
+        DB::beginTransaction();
+        try {
+            $testimonial->update($request->all());
+            DB::commit();
+            return redirect()->route('admin.testimonials.index')->with('success', 'Testimonial updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Admin Testimonial update error: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'An error occurred while updating the testimonial. Please try again.');
+        }
     }
 
     public function destroy(Testimonial $testimonial)
     {
-        $testimonial->delete();
-        return redirect()->route('admin.testimonials.index')->with('success', 'Testimonial deleted successfully.');
+        DB::beginTransaction();
+        try {
+            $testimonial->delete();
+            DB::commit();
+            return redirect()->route('admin.testimonials.index')->with('success', 'Testimonial deleted successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Admin Testimonial delete error: ' . $e->getMessage());
+            return back()->with('error', 'An error occurred while deleting the testimonial. Please try again.');
+        }
     }
 }

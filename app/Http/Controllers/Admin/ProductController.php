@@ -41,40 +41,50 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-        $query = Product::with(['mainCategory', 'brand', 'defaultVariant.images', 'taxClass']);
+        try {
+            $query = Product::with(['mainCategory', 'brand', 'defaultVariant.images', 'taxClass']);
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('product_code', 'like', "%{$search}%")
-                    ->orWhereHas('defaultVariant', function ($v) use ($search) {
-                        $v->where('sku', 'like', "%{$search}%");
-                    });
-            });
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('product_code', 'like', "%{$search}%")
+                        ->orWhereHas('defaultVariant', function ($v) use ($search) {
+                            $v->where('sku', 'like', "%{$search}%");
+                        });
+                });
+            }
+
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+
+            if ($request->filled('type')) {
+                $query->where('product_type', $request->type);
+            }
+
+            $products = $query->latest()->paginate(10)->withQueryString();
+
+            return view('admin.products.index', compact('products'));
+        } catch (\Exception $e) {
+            \Log::error('Error loading products list: ' . $e->getMessage());
+            return back()->with('error', 'An error occurred while loading the products list. Please try again later.');
         }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('type')) {
-            $query->where('product_type', $request->type);
-        }
-
-        $products = $query->latest()->paginate(10)->withQueryString();
-
-        return view('admin.products.index', compact('products'));
     }
 
     public function create()
     {
-        $categories = Category::with('children')->whereNull('parent_id')->get();
-        $brands = Brand::where('status', 1)->get();
-        $taxClasses = TaxClass::all();
-        $tags = Tag::all();
+        try {
+            $categories = Category::with('children')->whereNull('parent_id')->get();
+            $brands = Brand::where('status', 1)->get();
+            $taxClasses = TaxClass::all();
+            $tags = Tag::all();
 
-        return view('admin.products.create', compact('categories', 'brands', 'taxClasses', 'tags'));
+            return view('admin.products.create', compact('categories', 'brands', 'taxClasses', 'tags'));
+        } catch (\Exception $e) {
+            \Log::error('Error loading product creation page: ' . $e->getMessage());
+            return redirect()->route('admin.products.index')->with('error', 'An error occurred while loading the creation page.');
+        }
     }
 
     public function store(Request $request)
@@ -105,36 +115,43 @@ class ProductController extends Controller
 
     public function edit($id)
     {
-        // Eager load everything needed for the view, mirroring Service logic but as Eloquent model
-        $product = Product::with([
-            'tags',
-            'categories',
-            'defaultVariant.images', // For simple product data
-            'brand',
-            'mainCategory',
-            'variants.images',
-            'variants.primaryImage.media',
-            'specifications' => function ($q) {
-                $q->with('values');
-            }
-        ])->findOrFail($id);
+        try {
+            // Eager load everything needed for the view, mirroring Service logic but as Eloquent model
+            $product = Product::with([
+                'tags',
+                'categories',
+                'defaultVariant.images', // For simple product data
+                'brand',
+                'mainCategory',
+                'variants.images',
+                'variants.primaryImage.media',
+                'specifications' => function ($q) {
+                    $q->with('values');
+                }
+            ])->findOrFail($id);
 
-        $categories = Category::with('children')->whereNull('parent_id')->get();
-        $brands = Brand::where('status', 1)->get();
-        $taxClasses = TaxClass::all();
-        $tags = Tag::all();
+            $categories = Category::with('children')->whereNull('parent_id')->get();
+            $brands = Brand::where('status', 1)->get();
+            $taxClasses = TaxClass::all();
+            $tags = Tag::all();
 
-        $attributes = [];
-        if ($product->product_type === 'configurable' && $product->main_category_id) {
-            try {
-                $attributes = $this->productService->getCategoryAttributes($product->main_category_id);
-            } catch (\Exception $e) {
-                // Log error but continue
-                \Log::error('Failed to preload attributes for edit: ' . $e->getMessage());
+            $attributes = [];
+            if ($product->product_type === 'configurable' && $product->main_category_id) {
+                try {
+                    $attributes = $this->productService->getCategoryAttributes($product->main_category_id);
+                } catch (\Exception $e) {
+                    // Log error but continue
+                    \Log::error('Failed to preload attributes for edit: ' . $e->getMessage());
+                }
             }
+
+            return view('admin.products.edit', compact('product', 'categories', 'brands', 'taxClasses', 'tags', 'attributes'));
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return redirect()->route('admin.products.index')->with('error', 'Product not found.');
+        } catch (\Exception $e) {
+            \Log::error('Error loading product edit page: ' . $e->getMessage());
+            return redirect()->route('admin.products.index')->with('error', 'An error occurred while loading the product details.');
         }
-
-        return view('admin.products.edit', compact('product', 'categories', 'brands', 'taxClasses', 'tags', 'attributes'));
     }
 
     public function update(Request $request, $id)
@@ -180,12 +197,17 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        if ($product->orderItems()->exists()) {
-            return back()->with('error', 'Cannot delete product. It has associated orders.');
-        }
+        try {
+            if ($product->orderItems()->exists()) {
+                return back()->with('error', 'Cannot delete product. It has associated orders.');
+            }
 
-        $product->delete();
-        return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully.');
+            $product->delete();
+            return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Error deleting product: ' . $e->getMessage());
+            return back()->with('error', 'An error occurred while deleting the product. Please try again.');
+        }
     }
 
     // AJAX Endpoints used by Blade Views (axios)

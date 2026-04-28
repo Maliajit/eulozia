@@ -24,6 +24,9 @@ use App\Http\Controllers\Api\Admin\AttributeValueController as ApiAttributeValue
 use App\Http\Controllers\Api\Admin\BrandController as ApiBrand;
 use App\Http\Controllers\Api\Admin\TaxClassController as ApiTaxClass;
 use App\Http\Controllers\Api\Admin\TaxRateController as ApiTaxRate;
+use App\Http\Controllers\Api\Admin\SpecificationController as ApiSpecification;
+use App\Http\Controllers\Api\Admin\SpecificationValueController as ApiSpecificationValue;
+use App\Http\Controllers\Api\Admin\SpecificationGroupController as ApiSpecificationGroup;
 
 Route::prefix('admin')->group(function () {
 
@@ -375,5 +378,54 @@ Route::prefix('api/admin')->middleware(['web', 'admin.api.auth'])->group(functio
         Route::post('/bulk-delete', [ApiTaxRate::class, 'bulkDelete']);
         Route::post('/bulk-status', [ApiTaxRate::class, 'bulkStatus']);
         Route::post('/calculate', [ApiTaxRate::class, 'calculate']);
+    });
+
+    // Specification Groups Routes
+    Route::prefix('specification-groups')->group(function () {
+        Route::get('/', [ApiSpecificationGroup::class, 'index']);
+        Route::get('/dropdown', [ApiSpecificationGroup::class, 'dropdown']);
+        Route::get('/statistics', [ApiSpecificationGroup::class, 'statistics']);
+        Route::get('/for-category-assignment', [ApiSpecificationGroup::class, 'forCategoryAssignment']);
+        Route::post('/', [ApiSpecificationGroup::class, 'store']);
+        Route::get('/{id}', [ApiSpecificationGroup::class, 'show']);
+        Route::put('/{id}', [ApiSpecificationGroup::class, 'update']);
+        Route::delete('/{id}', [ApiSpecificationGroup::class, 'destroy']);
+        Route::post('/{id}/toggle-status', [ApiSpecificationGroup::class, 'toggleStatus']);
+        Route::post('/bulk-update', [ApiSpecificationGroup::class, 'bulkUpdate']);
+        Route::post('/bulk-delete', [ApiSpecificationGroup::class, 'bulkDelete']);
+    });
+
+    // Specification Routes
+    Route::prefix('specifications')->group(function () {
+        Route::get('/', [ApiSpecification::class, 'index']);
+        Route::get('/dropdown', [ApiSpecification::class, 'dropdown']);
+        Route::get('/input-types', [ApiSpecification::class, 'inputTypes']);
+        Route::get('/statistics', [ApiSpecification::class, 'statistics']);
+        Route::get('/for-product-creation', [ApiSpecification::class, 'forProductCreation']);
+        Route::post('/', [ApiSpecification::class, 'store']);
+        Route::get('/{id}', [ApiSpecification::class, 'show']);
+        Route::put('/{id}', [ApiSpecification::class, 'update']);
+        Route::delete('/{id}', [ApiSpecification::class, 'destroy']);
+
+        // Status operations
+        Route::post('/{id}/toggle-status', [ApiSpecification::class, 'toggleStatus']);
+        Route::post('/{id}/toggle-required', [ApiSpecification::class, 'toggleRequired']);
+        Route::post('/{id}/toggle-filterable', [ApiSpecification::class, 'toggleFilterable']);
+
+        // Bulk operations
+        Route::post('/bulk-update', [ApiSpecification::class, 'bulkUpdate']);
+        Route::post('/bulk-delete', [ApiSpecification::class, 'bulkDelete']);
+
+        // Specification Values Routes
+        Route::prefix('/{specification}/values')->group(function () {
+            Route::get('/', [ApiSpecificationValue::class, 'index']);
+            Route::post('/', [ApiSpecificationValue::class, 'store']);
+            Route::get('/{id}', [ApiSpecificationValue::class, 'show']);
+            Route::put('/{id}', [ApiSpecificationValue::class, 'update']);
+            Route::delete('/{id}', [ApiSpecificationValue::class, 'destroy']);
+            Route::post('/{id}/toggle-status', [ApiSpecificationValue::class, 'toggleStatus']);
+            Route::post('/bulk-update', [ApiSpecificationValue::class, 'bulkUpdate']);
+            Route::post('/bulk-delete', [ApiSpecificationValue::class, 'bulkDelete']);
+        });
     });
 });

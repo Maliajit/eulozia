@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use App\Helpers\CartHelper;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OTPVerify;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -152,40 +153,121 @@ class AuthController extends Controller
                 ->with('success', 'Registration successful! Welcome, ' . $customer->name . '!');
         }
 
-        // Generate Email OTP
-        $emailOTP = rand(100000, 999999);
+        return redirect()->route('customer.home.index')
+            ->with('success', 'Registration successful! Welcome, ' . $customer->name . '!');
+    }
 
-        // Send OTP via Email
-        try {
-            Mail::to($customer->email)->send(new OTPVerify($emailOTP));
-        } catch (\Exception $e) {
-            \Log::error('OTP Email sending failed: ' . $e->getMessage());
+    public function sendOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'type' => 'required|in:login,register'
+        ]);
+
+        $email = strtolower(trim($request->email));
+        $type = $request->type;
+
+        $customer = Customer::where('email', $email)->first();
+
+        if ($type === 'login' && !$customer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No account found with this email. Please create an account first.'
+            ], 404);
         }
 
-        // Store verification data in cache with unique key
-        $verificationKey = 'verify_' . md5($customer->email . time());
-        $verificationData = [
-            'customer_id' => $customer->id,
-            'email' => $customer->email,
-            'mobile' => $customer->mobile,
-            'email_otp' => $emailOTP,
-            'attempts' => 0,
-            'created_at' => now()->timestamp
-        ];
+        if ($type === 'register' && $customer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This email is already registered. Please login instead.'
+            ], 400);
+        }
 
-        Cache::put($verificationKey, $verificationData, 300); // 5 minutes
-        Cache::put('email_otp_' . $customer->email, $emailOTP, 300);
+        // Generate OTP
+        $otp = rand(100000, 999999);
+        
+        // Store in cache
+        Cache::put('otp_' . $email, $otp, 600); // 10 minutes
 
-        // Store verification key in session
-        session(['verification_key' => $verificationKey]);
-
-        return redirect()->route('customer.verify')
-            ->with([
-                'customer_id' => $customer->id,
-                'email' => $customer->email,
-                'verification_key' => $verificationKey,
-                'success' => 'Registration successful! Please check your email for OTP.'
+        // Send Email
+        try {
+            Mail::to($email)->send(new OTPVerify($otp));
+            return response()->json([
+                'success' => true,
+                'message' => 'OTP sent successfully to ' . $email
             ]);
+        } catch (\Exception $e) {
+            \Log::error('OTP sending failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send OTP. Please try again.'
+            ], 500);
+        }
+    }
+
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'otp' => 'required|digits:6',
+            'type' => 'required|in:login,register',
+            'name' => 'required_if:type,register|string|max:100',
+            'mobile' => 'required_if:type,register|string|digits:10'
+        ]);
+
+        $email = strtolower(trim($request->email));
+        $otp = $request->otp;
+        $type = $request->type;
+
+        $cachedOtp = Cache::get('otp_' . $email);
+
+        if (!$cachedOtp || $cachedOtp != $otp) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or expired OTP.'
+            ], 400);
+        }
+
+        // OTP Validated
+        Cache::forget('otp_' . $email);
+
+        if ($type === 'register') {
+            $customer = Customer::create([
+                'name' => ucwords(strtolower(trim($request->name))),
+                'email' => $email,
+                'mobile' => trim($request->mobile),
+                'password' => null, // Passwordless
+                'status' => 1,
+                'email_verified_at' => now(),
+                'mobile_verified_at' => now()
+            ]);
+        } else {
+            $customer = Customer::where('email', $email)->first();
+            if (!$customer) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Account not found.'
+                ], 404);
+            }
+        }
+
+        // Login
+        Auth::guard('customer')->login($customer, true);
+        
+        // Update last login
+        $customer->update([
+            'last_login_at' => now(),
+            'last_login_ip' => $request->ip()
+        ]);
+
+        // Sync cart
+        $this->cartHelper->syncCart();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Welcome back, ' . $customer->name . '!',
+            'redirect' => session()->pull('url.intended', route('customer.home.index'))
+        ]);
     }
 
     public function verifyPage()

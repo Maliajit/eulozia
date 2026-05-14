@@ -26,6 +26,10 @@ Route::name('customer.')->group(function () {
     | AUTHENTICATION
     |--------------------------------------------------------------------------
     */
+    // OTP Routes
+    Route::post('/otp/send', [CustomerAuth::class, 'sendOtp'])->name('otp.send');
+    Route::post('/otp/verify', [CustomerAuth::class, 'verifyOtp'])->name('otp.verify');
+
     // Guest Routes
     Route::middleware('guest')->group(function () {
         Route::get('/login', [CustomerAuth::class, 'loginPage'])->name('login');
@@ -162,6 +166,17 @@ Route::name('customer.')->group(function () {
         Route::get('/{slug}', [CustomerPage::class, 'show'])->name('page.show');
     });
 });
+
+// File serving route for local storage files (no symlink needed)
+Route::get('/storage/{path}', function ($path) {
+    $fullPath = storage_path('app/private/' . $path);
+    
+    if (!file_exists($fullPath)) {
+        abort(404);
+    }
+    
+    return response()->file($fullPath);
+})->where('path', '.*')->name('storage.file');
 
 // Fallback
 Route::fallback(function () {

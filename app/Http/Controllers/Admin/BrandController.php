@@ -141,18 +141,18 @@ class BrandController extends Controller
 
             if ($request->hasFile('logo')) {
                 if ($brand->logo) {
-                    Storage::disk('public')->delete($brand->logo->file_path);
+                    Storage::disk('local')->delete($brand->logo->file_path);
                     $brand->logo->delete();
                 }
 
                 $logoFile = $request->file('logo');
                 $filename = 'brand_' . time() . '.' . $logoFile->getClientOriginalExtension();
-                $path = $logoFile->storeAs('brands/logos', $filename, 'public');
+                $path = $logoFile->storeAs('brands/logos', $filename, 'local');
 
                 $media = Media::create([
                     'file_name' => $logoFile->getClientOriginalName(),
                     'file_path' => $path,
-                    'disk' => 'public',
+                    'disk' => 'local',
                     'mime_type' => $logoFile->getMimeType(),
                     'file_type' => 'image',
                     'file_size' => $logoFile->getSize(),
@@ -198,7 +198,7 @@ class BrandController extends Controller
             }
 
             if ($brand->logo) {
-                Storage::disk('public')->delete($brand->logo->file_path);
+                Storage::disk('local')->delete($brand->logo->file_path);
                 $brand->logo->delete();
             }
 
@@ -246,7 +246,7 @@ class BrandController extends Controller
             foreach ($brands as $brand) {
                 if (!$brand->products()->exists()) {
                     if ($brand->logo) {
-                        Storage::disk('public')->delete($brand->logo->file_path);
+                        Storage::disk('local')->delete($brand->logo->file_path);
                         $brand->logo->delete();
                     }
                     $brand->seoMetadata()->delete();

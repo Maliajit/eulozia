@@ -168,7 +168,7 @@ class MediaController extends Controller
                     $fullPath = $storagePath . '/' . $uniqueName;
 
                     // Store file
-                    Storage::disk('public')->putFileAs($storagePath, $file, $uniqueName);
+                    Storage::disk('local')->putFileAs($storagePath, $file, $uniqueName);
 
                     // Create thumbnails for images
                     $thumbnails = [];
@@ -190,7 +190,7 @@ class MediaController extends Controller
                     $media = Media::create([
                         'file_name' => $originalName,
                         'file_path' => $fullPath,
-                        'disk' => 'public',
+                        'disk' => 'local',
                         'mime_type' => $mimeType,
                         'file_type' => $fileType,
                         'file_size' => $fileSize,
@@ -292,12 +292,12 @@ class MediaController extends Controller
             }
 
             // Delete file from storage
-            Storage::disk('public')->delete($media->file_path);
+            Storage::disk('local')->delete($media->file_path);
 
             // Delete thumbnails
             if ($media->thumbnails) {
                 foreach ($media->thumbnails as $thumbnail) {
-                    Storage::disk('public')->delete($thumbnail);
+                    Storage::disk('local')->delete($thumbnail);
                 }
             }
 
@@ -344,12 +344,12 @@ class MediaController extends Controller
                     }
 
                     // Delete file
-                    Storage::disk('public')->delete($media->file_path);
+                    Storage::disk('local')->delete($media->file_path);
 
                     // Delete thumbnails
                     if ($media->thumbnails) {
                         foreach ($media->thumbnails as $thumbnail) {
-                            Storage::disk('public')->delete($thumbnail);
+                            Storage::disk('local')->delete($thumbnail);
                         }
                     }
 
@@ -451,7 +451,7 @@ class MediaController extends Controller
 
             $smallImage = clone $image;
             $smallImage->cover(150, 150);
-            Storage::disk('public')->put(
+            Storage::disk('local')->put(
                 $smallPath,
                 (string) $smallImage->encodeByExtension($extension, quality: 80)
             );
@@ -463,7 +463,7 @@ class MediaController extends Controller
 
             $mediumImage = clone $image;
             $mediumImage->resize(300, 300);
-            Storage::disk('public')->put(
+            Storage::disk('local')->put(
                 $mediumPath,
                 (string) $mediumImage->encodeByExtension($extension, quality: 85)
             );

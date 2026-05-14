@@ -18,83 +18,66 @@
 
 
             <!-- Signup Form -->
-            <form id="signupForm" method="POST" action="{{ route('customer.register.submit') }}" class="space-y-4">
-                @csrf
-                <div>
-                    <label for="signupName" class="block text-sm font-medium text-secondary mb-2">Full Name</label>
-                    <input type="text" id="signupName" name="name"
-                        class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent @error('name') border-red-500 @enderror"
-                        placeholder="Enter your full name" value="{{ old('name') }}" required>
-                    @error('name')
-                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                    @enderror
-                </div>
+            <div id="signupFormContainer">
+                <form id="signupForm" class="space-y-4">
+                    @csrf
+                    <div id="signupInitialStep">
+                        <div>
+                            <label for="signupName" class="block text-sm font-medium text-secondary mb-2">Full Name</label>
+                            <input type="text" id="signupName" name="name"
+                                class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent"
+                                placeholder="Enter your full name" required>
+                        </div>
 
-                <div>
-                    <label for="signupEmail" class="block text-sm font-medium text-secondary mb-2">Email Address</label>
-                    <input type="email" id="signupEmail" name="email"
-                        class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent @error('email') border-red-500 @enderror"
-                        placeholder="Enter your email" value="{{ old('email') }}" required>
-                    @error('email')
-                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                    @enderror
-                </div>
+                        <div>
+                            <label for="signupEmail" class="block text-sm font-medium text-secondary mb-2">Email Address</label>
+                            <input type="email" id="signupEmail" name="email"
+                                class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent"
+                                placeholder="Enter your email" required>
+                        </div>
 
-                <div>
-                    <label for="signupPhone" class="block text-sm font-medium text-secondary mb-2">Phone Number</label>
-                    <input type="tel" id="signupPhone" name="mobile"
-                        class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent @error('mobile') border-red-500 @enderror"
-                        placeholder="Enter 10-digit mobile number" value="{{ old('mobile') }}"
-                        oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10);" pattern="[0-9]{10}"
-                        maxlength="10" minlength="10" inputmode="numeric" required>
-                    @error('mobile')
-                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                    @enderror
-                </div>
+                        <div>
+                            <label for="signupPhone" class="block text-sm font-medium text-secondary mb-2">Phone Number</label>
+                            <input type="tel" id="signupPhone" name="mobile"
+                                class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent"
+                                placeholder="Enter 10-digit mobile number"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10);" pattern="[0-9]{10}"
+                                maxlength="10" minlength="10" inputmode="numeric" required>
+                        </div>
 
-                <div>
-                    <label for="signupPassword" class="block text-sm font-medium text-secondary mb-2">Password</label>
-                    <input type="password" id="signupPassword" name="password"
-                        class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent @error('password') border-red-500 @enderror"
-                        placeholder="Create a password" required>
-                    @error('password')
-                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                    @enderror
-                    <div class="mt-1 text-xs text-accent" id="passwordStrength"></div>
-                </div>
+                        <label class="flex items-start space-x-3 mt-4">
+                            <input type="checkbox" name="terms"
+                                class="mt-1 rounded bg-gray-800 border-gray-700 text-accent focus:ring-accent"
+                                required>
+                            <span class="text-sm text-accent">
+                                I agree to the <a href="#" class="text-secondary hover:text-accent transition-colors duration-300">Terms & Conditions</a>
+                            </span>
+                        </label>
 
-                <div>
-                    <label for="signupConfirmPassword" class="block text-sm font-medium text-secondary mb-2">Confirm
-                        Password</label>
-                    <input type="password" id="signupConfirmPassword" name="password_confirmation"
-                        class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent @error('password_confirmation') border-red-500 @enderror"
-                        placeholder="Confirm your password" required>
-                    @error('password_confirmation')
-                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                    @enderror
-                </div>
+                        <button type="button" id="sendSignupOtpBtn"
+                            class="w-full mt-6 bg-accent text-primary py-3 px-6 rounded font-semibold hover:bg-gray-300 transition-colors duration-300 flex items-center justify-center">
+                            <span>Continue</span>
+                        </button>
+                    </div>
 
-                <label class="flex items-start space-x-3">
-                    <input type="checkbox" name="terms"
-                        class="mt-1 rounded bg-gray-800 border-gray-700 text-accent focus:ring-accent @error('terms') border-red-500 @enderror"
-                        required>
-                    <span class="text-sm text-accent">
-                        I agree to the <a href="#"
-                            class="text-secondary hover:text-accent transition-colors duration-300">Terms &
-                            Conditions</a>
-                        and <a href="#" class="text-secondary hover:text-accent transition-colors duration-300">Privacy
-                            Policy</a>
-                    </span>
-                    @error('terms')
-                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                    @enderror
-                </label>
-
-                <button type="submit"
-                    class="w-full bg-accent text-primary py-3 px-6 rounded font-semibold hover:bg-gray-300 transition-colors duration-300">
-                    Create Account
-                </button>
-            </form>
+                    <div id="signupOtpStep" class="hidden animate-fade-in">
+                        <div class="mb-4 text-center">
+                            <p class="text-sm text-accent mb-2">Verification code sent to your email.</p>
+                            <label for="signupOtp" class="block text-sm font-medium text-secondary mb-2">Enter OTP</label>
+                            <input type="text" id="signupOtp" name="otp" maxlength="6"
+                                class="w-full bg-gray-800 text-secondary px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-accent text-center text-2xl tracking-widest"
+                                placeholder="000000">
+                        </div>
+                        <button type="submit" id="verifySignupOtpBtn"
+                            class="w-full bg-accent text-primary py-3 px-6 rounded font-semibold hover:bg-gray-300 transition-colors duration-300 flex items-center justify-center">
+                            <span>Create Account</span>
+                        </button>
+                        <button type="button" id="resendSignupOtpBtn" class="w-full mt-4 text-sm text-accent hover:text-secondary transition-colors duration-300">
+                            Resend OTP
+                        </button>
+                    </div>
+                </form>
+            </div>
 
             <!-- Login Link -->
             <div class="mt-6 text-center">
@@ -124,6 +107,7 @@
             }, 10);
 
             document.body.style.overflow = 'hidden';
+            resetSignupForm();
         }
     }
 
@@ -142,10 +126,29 @@
         }
     }
 
+    function resetSignupForm() {
+        document.getElementById('signupInitialStep').classList.remove('hidden');
+        document.getElementById('signupOtpStep').classList.add('hidden');
+        document.getElementById('signupForm').reset();
+    }
+
     // Initialize signup modal
     document.addEventListener('DOMContentLoaded', function () {
         const signupModal = document.getElementById('signupModal');
         if (!signupModal) return;
+
+        const sendOtpBtn = document.getElementById('sendSignupOtpBtn');
+        const verifyOtpBtn = document.getElementById('verifySignupOtpBtn');
+        const signupForm = document.getElementById('signupForm');
+        
+        const nameInput = document.getElementById('signupName');
+        const emailInput = document.getElementById('signupEmail');
+        const phoneInput = document.getElementById('signupPhone');
+        const otpInput = document.getElementById('signupOtp');
+        const resendBtn = document.getElementById('resendSignupOtpBtn');
+
+        const initialStep = document.getElementById('signupInitialStep');
+        const otpStep = document.getElementById('signupOtpStep');
 
         // Close modal events
         document.getElementById('closeSignupModal')?.addEventListener('click', closeSignupModal);
@@ -155,26 +158,99 @@
             }
         });
 
-        // Password strength indicator
-        const passwordInput = document.getElementById('signupPassword');
-        const strengthText = document.getElementById('passwordStrength');
+        // Send OTP Logic
+        sendOtpBtn?.addEventListener('click', async function() {
+            const email = emailInput.value;
+            const name = nameInput.value;
+            const mobile = phoneInput.value;
+            const terms = document.querySelector('input[name="terms"]').checked;
 
-        if (passwordInput && strengthText) {
-            passwordInput.addEventListener('input', function () {
-                const password = this.value;
-                let strength = 'Too short';
-                let color = 'text-red-500';
+            if (!name || !email || !mobile || !terms) {
+                showToast('Please fill all fields and agree to terms', 'error');
+                return;
+            }
 
-                if (password.length >= 6) {
-                    strength = 'OK';
-                    color = 'text-green-500';
+            if (!email.includes('@')) {
+                showToast('Please enter a valid email address', 'error');
+                return;
+            }
+
+            if (mobile.length !== 10) {
+                showToast('Please enter a valid 10-digit mobile number', 'error');
+                return;
+            }
+
+            setLoading(this, true);
+            try {
+                const response = await axios.post("{{ route('customer.otp.send') }}", {
+                    email: email,
+                    type: 'register'
+                });
+
+                if (response.data.success) {
+                    showToast(response.data.message, 'success');
+                    initialStep.classList.add('hidden');
+                    otpStep.classList.remove('hidden');
                 }
+            } catch (error) {
+                const message = error.response?.data?.message || 'Failed to send OTP';
+                showToast(message, 'error');
+            } finally {
+                setLoading(this, false, 'Continue');
+            }
+        });
 
-                strengthText.textContent = `Password status: ${strength}`;
-                strengthText.className = `mt-1 text-xs ${color}`;
-            });
+        // Resend OTP Logic
+        resendBtn?.addEventListener('click', () => sendOtpBtn.click());
+
+        // Verify OTP & Register Logic
+        signupForm?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const name = nameInput.value;
+            const email = emailInput.value;
+            const mobile = phoneInput.value;
+            const otp = otpInput.value;
+
+            if (!otp || otp.length !== 6) {
+                showToast('Please enter a valid 6-digit OTP', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('verifySignupOtpBtn');
+            setLoading(btn, true);
+
+            try {
+                const response = await axios.post("{{ route('customer.otp.verify') }}", {
+                    name: name,
+                    email: email,
+                    mobile: mobile,
+                    otp: otp,
+                    type: 'register'
+                });
+
+                if (response.data.success) {
+                    showToast(response.data.message, 'success');
+                    setTimeout(() => {
+                        window.location.href = response.data.redirect;
+                    }, 1000);
+                }
+            } catch (error) {
+                const message = error.response?.data?.message || 'Invalid OTP';
+                showToast(message, 'error');
+            } finally {
+                setLoading(btn, false, 'Create Account');
+            }
+        });
+
+        function setLoading(btn, isLoading, originalText = '') {
+            if (isLoading) {
+                btn.disabled = true;
+                btn.innerHTML = '<svg class="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = `<span>${originalText}</span>`;
+            }
         }
-
 
         // Close with Escape key
         document.addEventListener('keydown', function (e) {
@@ -182,10 +258,6 @@
                 closeSignupModal();
             }
         });
-
-        // Re-open if there were signup errors
-        @if(session('form') === 'register' || ($errors->any() && session('form') === 'register'))         openSignupModal();         @if($errors->any())         if (typeof showToast === 'function') { showToast('{{ $errors->first() }}', 'error'); } @endif
-        @endif
     });
 
     // Make openSignupModal globally available

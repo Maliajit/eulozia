@@ -264,7 +264,7 @@ class BrandController extends Controller
 
                 // Delete old logo if exists
                 if ($brand->logo) {
-                    Storage::disk('public')->delete($brand->logo->file_path);
+                    Storage::disk('local')->delete($brand->logo->file_path);
                     $brand->logo->delete();
                 }
 
@@ -279,13 +279,13 @@ class BrandController extends Controller
                 $fullPath = $storagePath . '/' . $uniqueName;
 
                 // Store file
-                Storage::disk('public')->putFileAs($storagePath, $logoFile, $uniqueName);
+                Storage::disk('local')->putFileAs($storagePath, $logoFile, $uniqueName);
 
                 // Create media record
                 $media = Media::create([
                     'file_name' => $originalName,
                     'file_path' => $fullPath,
-                    'disk' => 'public',
+                    'disk' => 'local',
                     'mime_type' => $logoFile->getMimeType(),
                     'file_type' => 'image',
                     'file_size' => $logoFile->getSize(),
@@ -300,7 +300,7 @@ class BrandController extends Controller
                 // If logo is being removed
                 if ($request->has('remove_logo') && $request->remove_logo) {
                     if ($brand->logo) {
-                        Storage::disk('public')->delete($brand->logo->file_path);
+                        Storage::disk('local')->delete($brand->logo->file_path);
                         $brand->logo->delete();
                         $data['logo_id'] = null;
                     }
@@ -371,7 +371,7 @@ class BrandController extends Controller
 
             // Delete logo if exists
             if ($brand->logo) {
-                Storage::disk('public')->delete($brand->logo->file_path);
+                Storage::disk('local')->delete($brand->logo->file_path);
                 $brand->logo->delete();
             }
 
@@ -581,7 +581,7 @@ class BrandController extends Controller
             // Delete logos and metadata
             foreach ($brands as $brand) {
                 if ($brand->logo) {
-                    Storage::disk('public')->delete($brand->logo->file_path);
+                    Storage::disk('local')->delete($brand->logo->file_path);
                     $brand->logo->delete();
                 }
                 $brand->seoMetadata()->delete();

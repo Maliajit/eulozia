@@ -226,10 +226,10 @@ class Product extends Model
         
         $primaryImage = $variant->images->where('pivot.is_primary', 1)->first();
         if ($primaryImage) {
-            return $primaryImage->file_path; // or whatever the URL attribute is
+            return $primaryImage->url; // Return the URL instead of file_path
         }
         
-        return $variant->images->first()?->file_path ?? null;
+        return $variant->images->first()?->url ?? null;
     }
 
     public function getMainImageIdAttribute()

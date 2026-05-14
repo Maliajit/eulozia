@@ -164,7 +164,7 @@ class ProductController extends Controller
                         $primaryImage = $defaultVariant->images->sortBy('pivot.sort_order')->first();
                     }
                     if ($primaryImage && $primaryImage->file_path) {
-                        $mainImage = asset('storage/' . $primaryImage->file_path);
+                        $mainImage = $primaryImage->url;
                     }
                 }
 
@@ -177,7 +177,7 @@ class ProductController extends Controller
                                 $variantImage = $variant->images->sortBy('pivot.sort_order')->first();
                             }
                             if ($variantImage && $variantImage->file_path) {
-                                $mainImage = asset('storage/' . $variantImage->file_path);
+                                $mainImage = $variantImage->url;
                                 break;
                             }
                         }
@@ -431,7 +431,7 @@ public function show($slug): JsonResponse
                 $primaryImage = $defaultVariant->images->sortBy('pivot.sort_order')->first();
             }
             if ($primaryImage && $primaryImage->file_path) {
-                $mainImage = asset('storage/' . $primaryImage->file_path);
+                $mainImage = $primaryImage->url;
             }
         }
 
@@ -439,7 +439,7 @@ public function show($slug): JsonResponse
         if (!$mainImage && $allImages->isNotEmpty()) {
             $firstImage = $allImages->sortBy('pivot.sort_order')->first();
             if ($firstImage && $firstImage->file_path) {
-                $mainImage = asset('storage/' . $firstImage->file_path);
+                $mainImage = $firstImage->url;
             }
         }
 
@@ -452,7 +452,7 @@ public function show($slug): JsonResponse
         $productImages = $allImages->unique('id')->map(function ($image) {
             return [
                 'id' => $image->id,
-                'url' => asset('storage/' . $image->file_path),
+                'url' => $image->url,
                 'is_primary' => (bool) ($image->pivot->is_primary ?? false),
                 'sort_order' => $image->pivot->sort_order ?? 0,
                 'alt_text' => $image->alt_text
@@ -512,7 +512,7 @@ public function show($slug): JsonResponse
                 $images = $variant->images->map(function ($image) {
                     return [
                         'id' => $image->id,
-                        'url' => asset('storage/' . $image->file_path),
+                        'url' => $image->url,
                         'is_primary' => (bool) ($image->pivot->is_primary ?? false),
                         'sort_order' => $image->pivot->sort_order ?? 0,
                         'alt_text' => $image->alt_text
@@ -580,7 +580,7 @@ public function show($slug): JsonResponse
                             $primaryImage = $defaultVariant->images->sortBy('pivot.sort_order')->first();
                         }
                         if ($primaryImage && $primaryImage->file_path) {
-                            $mainImage = asset('storage/' . $primaryImage->file_path);
+                            $mainImage = $primaryImage->url;
                         }
                     }
 
@@ -621,7 +621,7 @@ public function show($slug): JsonResponse
                     $images = $variant->images->map(function ($image) {
                         return [
                             'id' => $image->id,
-                            'url' => asset('storage/' . $image->file_path),
+                            'url' => $image->url,
                             'is_primary' => (bool) ($image->pivot->is_primary ?? false),
                             'sort_order' => $image->pivot->sort_order ?? 0
                         ];

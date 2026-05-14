@@ -76,7 +76,7 @@ class InventoryController extends Controller
                     'current_stock' => $variant->stock_quantity,
                     'min_stock' => 10, // Default min stock for UI purposes
                     'status' => $variant->stock_status,
-                    'image' => $variant->display_image ? asset('storage/' . $variant->display_image) : null,
+                    'image' => $variant->display_image,
                     'last_updated' => $variant->updated_at->format('Y-m-d H:i'),
                 ];
             })->values()->all();

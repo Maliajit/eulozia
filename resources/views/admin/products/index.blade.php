@@ -74,7 +74,7 @@
                 <tr class="hover:bg-gray-50 transition">
                     <td class="px-6 py-4 whitespace-nowrap">
                         @if($product->main_image)
-                            <img src="{{ asset('storage/' . $product->main_image) }}" alt="{{ $product->name }}" class="h-12 w-12 object-cover rounded shadow-sm border">
+                            <img src="{{ $product->main_image }}" alt="{{ $product->name }}" class="h-12 w-12 object-cover rounded shadow-sm border">
                         @else
                             <div class="h-12 w-12 bg-gray-100 rounded flex items-center justify-center text-gray-400 text-xs shadow-sm border">No Img</div>
                         @endif

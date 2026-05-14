@@ -169,7 +169,7 @@ Route::name('customer.')->group(function () {
 
 // File serving route for local storage files (no symlink needed)
 Route::get('/storage/{path}', function ($path) {
-    $fullPath = storage_path('app/private/' . $path);
+    $fullPath = storage_path('app/public/' . $path);
     
     if (!file_exists($fullPath)) {
         abort(404);

@@ -39,7 +39,7 @@
     @forelse($banners as $banner)
     <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 group">
         <div class="relative h-48 overflow-hidden">
-            <img src="{{ Str::startsWith($banner->image, 'http') ? $banner->image : asset('storage/' . $banner->image) }}" 
+            <img src="{{ Str::startsWith($banner->image, 'http') ? $banner->image : \Illuminate\Support\Facades\Storage::url($banner->image) }}" 
                  alt="{{ $banner->title }}" 
                  class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
             <div class="absolute top-2 right-2">

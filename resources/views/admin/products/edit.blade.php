@@ -105,7 +105,7 @@
                     
                     <div id="main-image-preview" class="mb-3">
                          @if($product->main_image)
-                              <img src="{{ asset('storage/' . $product->main_image) }}" class="h-32 object-cover rounded border">
+                              <img src="{{ $product->main_image }}" class="h-32 object-cover rounded border">
                          @endif
                     </div>
                     
@@ -128,7 +128,7 @@
                              @foreach($product->defaultVariant->images as $img)
                                  @if(!$img->pivot->is_primary)
                                      <div class="relative group border rounded-lg overflow-hidden h-24">
-                                        <img src="{{ asset('storage/' . $img->file_path) }}" class="w-full h-full object-cover">
+                                        <img src="{{ $img->url }}" class="w-full h-full object-cover">
                                         <input type="hidden" name="gallery_image_ids[]" value="{{ $img->id }}">
                                         <button type="button" onclick="this.parentElement.remove()" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -284,7 +284,7 @@
                                                 {{-- Main Image --}}
                                                 <div class="relative w-10 h-10 variant-main-thumb group {{ $variant->primaryImage && $variant->primaryImage->media ? 'border-2 border-blue-500' : 'border border-dashed border-gray-300' }}">
                                                     @if($variant->primaryImage && $variant->primaryImage->media)
-                                                        <img src="{{ asset('storage/' . $variant->primaryImage->media->file_path) }}" class="w-full h-full object-cover transition-transform duration-200 transform group-hover:scale-[3] group-hover:z-50 group-hover:absolute group-hover:top-0 group-hover:left-0 group-hover:shadow-lg group-hover:border-2 group-hover:border-white bg-white">
+                                                        <img src="{{ $variant->primaryImage->media->url }}" class="w-full h-full object-cover transition-transform duration-200 transform group-hover:scale-[3] group-hover:z-50 group-hover:absolute group-hover:top-0 group-hover:left-0 group-hover:shadow-lg group-hover:border-2 group-hover:border-white bg-white">
                                                         <button type="button" onclick="removeVariantMainImage({{ $idx }})" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 w-4 h-4 flex items-center justify-center text-[10px] shadow-sm hover:bg-red-600 transition z-10">x</button>
                                                     @else
                                                          <div class="flex items-center justify-center w-full h-full bg-gray-50 text-[10px] text-gray-400">Main</div>
@@ -296,7 +296,7 @@
                                                 @foreach($variant->images as $vImg)
                                                     @if(!$vImg->pivot->is_primary)
                                                     <div class="relative w-10 h-10 border border-gray-200 group cursor-move" data-id="{{ $vImg->id }}">
-                                                        <img src="{{ asset('storage/' . $vImg->file_path) }}" class="w-full h-full object-cover">
+                                                        <img src="{{ $vImg->url }}" class="w-full h-full object-cover">
                                                          <button type="button" onclick="this.parentElement.remove();" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 w-4 h-4 flex items-center justify-center text-[10px] shadow-sm hover:bg-red-600 transition">x</button>
                                                          <input type="hidden" name="variants[{{ $idx }}][gallery_image_ids][]" value="{{ $vImg->id }}">
                                                     </div>

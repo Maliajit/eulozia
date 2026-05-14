@@ -170,8 +170,8 @@ class MediaController extends Controller
 
             // Delete physical files after successful commit
             foreach ($pathsToDelete as $path) {
-                if (Storage::disk('local')->exists($path)) {
-                    Storage::disk('local')->delete($path);
+                if (Storage::disk('public')->exists($path)) {
+                    Storage::disk('public')->delete($path);
                 }
             }
 
@@ -276,7 +276,7 @@ class MediaController extends Controller
                     $fullPath = $storagePath . '/' . $uniqueName;
 
                     // Physical upload
-                    Storage::disk('local')->putFileAs($storagePath, $file, $uniqueName);
+                    Storage::disk('public')->putFileAs($storagePath, $file, $uniqueName);
 
                     // Create thumbnails if image
                     $thumbnails = [];
@@ -287,7 +287,7 @@ class MediaController extends Controller
                     $media = Media::create([
                         'file_name' => $originalName,
                         'file_path' => $fullPath,
-                        'disk' => 'local',
+                        'disk' => 'public',
                         'mime_type' => $file->getMimeType(),
                         'file_type' => str_starts_with($file->getMimeType(), 'image/') ? 'image' : 'document',
                         'file_size' => $file->getSize(),
@@ -312,13 +312,13 @@ class MediaController extends Controller
                 } catch (\Exception $e) {
                     DB::rollBack();
                     // Clean up physical file if DB failed
-                    if (isset($fullPath) && Storage::disk('local')->exists($fullPath)) {
-                        Storage::disk('local')->delete($fullPath);
+                    if (isset($fullPath) && Storage::disk('public')->exists($fullPath)) {
+                        Storage::disk('public')->delete($fullPath);
                     }
                     if (isset($thumbnails) && !empty($thumbnails)) {
                         foreach ($thumbnails as $thumbPath) {
-                            if (Storage::disk('local')->exists($thumbPath)) {
-                                Storage::disk('local')->delete($thumbPath);
+                            if (Storage::disk('public')->exists($thumbPath)) {
+                                Storage::disk('public')->delete($thumbPath);
                             }
                         }
                     }
@@ -358,7 +358,7 @@ class MediaController extends Controller
             $smallName = $originalName . '_small.' . $extension;
             $smallImage = clone $image;
             $smallImage->cover(150, 150);
-            Storage::disk('local')->put($storagePath . '/' . $smallName, (string) $smallImage->encodeByExtension($extension));
+            Storage::disk('public')->put($storagePath . '/' . $smallName, (string) $smallImage->encodeByExtension($extension));
             $thumbnails['small'] = $storagePath . '/' . $smallName;
 
         } catch (\Exception $e) {

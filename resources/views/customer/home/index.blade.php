@@ -13,7 +13,7 @@
                             $bannerImage = $banner->image;
                             $bannerUrl = Str::startsWith($bannerImage, ['http://', 'https://'])
                                 ? $bannerImage
-                                : asset('storage/' . $bannerImage);
+                                : \Illuminate\Support\Facades\Storage::url($bannerImage);
                         @endphp
                         <div class="relative w-full h-[500px] outline-none">
                             <img src="{{ $bannerUrl }}" alt="{{ $banner->title ?? 'Fashion Collection' }}"
@@ -82,7 +82,7 @@
                                 <div
                                     class="w-full h-40 md:h-56 flex items-center justify-center overflow-hidden shadow-sm group-hover:shadow-md transition-all duration-300">
                                     @if($category->image)
-                                        <img src="{{ Str::startsWith($category->image->url, 'http') ? $category->image->url : asset('storage/' . $category->image->url) }}"
+                                        <img src="{{ $category->image->url }}"
                                             alt="{{ $category->name }}"
                                             class="object-contain h-full w-full group-hover:scale-105 transition-transform duration-500">
                                     @else
@@ -112,7 +112,7 @@
                     @foreach($exploreMoreCategories as $category)
                         <div class="relative group overflow-hidden h-full">
                             @if($category->image)
-                                <img src="{{ Str::startsWith($category->image->url, 'http') ? $category->image->url : asset('storage/' . $category->image->url) }}"
+                                <img src="{{ $category->image->url }}"
                                     alt="{{ $category->name }}"
                                     class="w-full h-full object-contain transition-transform duration-700 group-hover:scale-110">
                             @else

@@ -7,7 +7,7 @@
                     @if(!empty($product['images']))
                         @foreach ($product['images'] as $image)
                             <div class="carousel-image flex-shrink-0 w-full h-full">
-                                <img src="{{ Str::startsWith($image['url'], 'http') ? $image['url'] : asset('storage/' . $image['url']) }}" alt="{{ $product['name'] }}"
+                                <img src="{{ $image['url'] }}" alt="{{ $product['name'] }}"
                                     class="w-full h-full object-cover" />
                             </div>
                         @endforeach

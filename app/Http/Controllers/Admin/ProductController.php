@@ -271,7 +271,7 @@ class ProductController extends Controller
                 return [
                     'id' => $product->id,
                     'name' => $product->name,
-                    'image' => asset('storage/' . $product->main_image),
+                    'image' => $product->main_image,
                 ];
             })
         ]);

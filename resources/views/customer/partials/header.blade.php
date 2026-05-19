@@ -15,34 +15,37 @@
 
 <!-- Main Header -->
 <header class="bg-primary text-secondary py-4 px-6 border-b border-gray-800">
-    <div class="container mx-auto flex items-center justify-between">
-        <!-- Left: Navigation Links (Desktop) -->
-        <nav class="hidden md:flex space-x-8">
-            @foreach($headerCategories as $category)
-                <a href="{{ route('customer.products.index', ['category' => $category->slug]) }}"
-                    class="hover:text-accent transition-colors duration-300">{{ $category->name }}</a>
-            @endforeach
-        </nav>
+    <div class="container mx-auto flex items-center justify-between relative py-2">
+        <!-- Left: Navigation / Menu (Mobile & Desktop) -->
+        <div class="flex items-center justify-start z-10">
+            <!-- Hamburger Menu (Mobile) -->
+            <div class="md:hidden">
+                <button id="hamburger" class="hamburger flex flex-col w-6 h-6 justify-between focus:outline-none">
+                    <span class="hamburger-line w-full h-0.5 bg-secondary rounded"></span>
+                    <span class="hamburger-line w-full h-0.5 bg-secondary rounded"></span>
+                    <span class="hamburger-line w-full h-0.5 bg-secondary rounded"></span>
+                </button>
+            </div>
 
-        <!-- Hamburger Menu (Mobile) -->
-        <div class="md:hidden">
-            <button id="hamburger" class="hamburger flex flex-col w-6 h-6 justify-between focus:outline-none">
-                <span class="hamburger-line w-full h-0.5 bg-secondary rounded"></span>
-                <span class="hamburger-line w-full h-0.5 bg-secondary rounded"></span>
-                <span class="hamburger-line w-full h-0.5 bg-secondary rounded"></span>
-            </button>
+            <!-- Left: Navigation Links (Desktop) -->
+            <nav class="hidden md:flex space-x-8">
+                @foreach($headerCategories as $category)
+                    <a href="{{ route('customer.products.index', ['category' => $category->slug]) }}"
+                        class="hover:text-accent transition-colors duration-300">{{ $category->name }}</a>
+                @endforeach
+            </nav>
         </div>
 
-        <!-- Center: Logo -->
-        <div class="flex-1 text-center md:flex-none lg:mr-48">
+        <!-- Center: Logo (Absolutely Centered) -->
+        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0">
             <a href="{{ route('customer.home') }}" class="inline-block">
-                <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-16 mx-auto">
+                <img src="{{ asset('images/logo.png') }}" alt="Logo"
+                    class="h-24 md:h-28 max-w-[120px] md:max-w-[200px] object-contain transition-all duration-300">
             </a>
         </div>
 
-
         <!-- Right: Icons -->
-        <div class="flex items-center space-x-6">
+        <div class="flex items-center justify-end space-x-3 md:space-x-6 z-10">
             <button class="hover:text-accent transition-colors duration-300 search-toggle">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">

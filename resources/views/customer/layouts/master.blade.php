@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Fashion Store')</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
@@ -68,19 +69,19 @@
         function updateCarousel(track, direction) {
             const slides = track.querySelectorAll('.carousel-slide');
             let current = parseInt(track.getAttribute('data-current')) || 0;
-            
+
             current += direction;
-            
+
             if (current >= slides.length) current = 0;
             if (current < 0) current = slides.length - 1;
-            
+
             track.style.transform = `translateX(-${current * 100}%)`;
             track.setAttribute('data-current', current);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             const carousels = document.querySelectorAll('.product-inline-carousel');
-            
+
             carousels.forEach(carousel => {
                 const track = carousel.querySelector('.carousel-track');
                 let startX = 0;

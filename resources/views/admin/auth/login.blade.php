@@ -20,7 +20,7 @@
     <title>Admin Sign In - {{ config('app.name', 'Eulozia') }}</title>
 
     <!-- Branding Meta -->
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
 
     <!-- Google Fonts: Outfit & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

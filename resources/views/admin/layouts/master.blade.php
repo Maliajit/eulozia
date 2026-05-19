@@ -25,7 +25,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Branding Meta -->
-    <link rel="icon" type="image/x-icon" href="{{ asset(config('app.favicon', 'favicon.ico')) }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
 
     <!-- TailwindCSS -->
     <script src="https://cdn.tailwindcss.com"></script>
